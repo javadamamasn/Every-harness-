@@ -65,3 +65,7 @@ Append-only log. Format: date — decision — alternatives — reason — verif
   `session_id 740b5a01` (probe script kept out of the repo; token never
   committed). `message.complete` re-seals interim deltas, so the reducer keeps
   the streamed text and only steps the turn — no double render.
+  Verified: CI run 40581188609 green (contract tests + mapper tests + APK);
+  node-conformance green. Note: contract tests run on `runBlocking` (real IO) —
+  `runTest`'s virtual clock stalls real-IO WS round-trips; same pattern as the
+  transport suite.
