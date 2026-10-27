@@ -45,7 +45,23 @@ Append-only log. Format: date — decision — alternatives — reason — verif
   (DiscoveryRanker, pure) power the live Hub via a connect-scan-close session —
   the pinned foreground connection lands with M6. The bridge token sits in
   DataStore until M6's Keystore vault; it is never logged and only embedded
-  inside the WebSocket hello frame. Verified: CI run 40563515659 green
-  (transport contract tests vs a wire-level fake bridge; discovery ranker
-  tests; full APK assemble); node-conformance run green. MockWebServer
-  shutdown noise is tolerated in the after-hook (documented quirk).
+  inside the WebSocket hello frame.  Verified: CI run 40563515659 green (transport contract tests vs a wire-level fake bridge; discovery ranker
+  tests; full APK assemble); node-conformance run green. MockWebServer shutdown noise is tolerated in the
+  after-hook (documented quirk).
+
+- 2026-10-27 — **M4: Hermes direct gateway (verified against the live server).** The
+  Hermes adapter speaks to the dashboard's own tui_gateway WebSocket server
+  (`app/tui_gateway/ws.py` cross-checked) — `ws://127.0.0.1:9119/api/ws?token=…`,
+  ND-JSON JSON-RPC 2.0, an immediate `gateway.ready` event with
+  `params.type/payload` framing; streaming events ride the same envelope
+  (`message.delta{ text, rendered }`, `reasoning.delta{ text }`,
+  `thinking.delta` is a STATUS spinner line not reasoning, `tool.start{
+  toolId, name, argsText }`, `tool.complete{ toolId, resultText, durationS }`,
+  `message.complete{ text, reasoning, usage }`, `session.info`, `approval.request`).
+  `session.create` params are `{ cwd?, source:"chat" }`, response `{ session_id,
+  stored_session_id, info }`; `prompt.submit` params `{ text, session_id }`.
+  Live probe evidence: a real `hermes dashboard` (already running on this
+  device) answered handshake + `gateway.ready` + `session.create` →
+  `session_id 740b5a01` (probe script kept out of the repo; token never
+  committed). `message.complete` re-seals interim deltas, so the reducer keeps
+  the streamed text and only steps the turn — no double render.

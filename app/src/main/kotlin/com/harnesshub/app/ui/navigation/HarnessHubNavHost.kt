@@ -80,7 +80,7 @@ fun HarnessHubNavHost() {
             modifier = Modifier.padding(padding),
         ) {
             composable("hub") { HubScreen() }
-            composable("chat") { ChatScreen() }
+            composable("chat") { ChatScreen(onOpenSetup = { navController.navigate("wizard") }) }
             composable("sessions") { SessionsScreen() }
             composable("skills") { SkillsScreen() }
             composable("models") { ModelsScreen() }

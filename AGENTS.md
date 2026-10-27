@@ -49,7 +49,13 @@ OpenCode, OpenClaw, Codex, Gemini CLI, generic ACP/OpenAI-compatible, PTY fallba
       Hub cards with status/location/confidence, bridge setup sheet, rescan) —
       partials: manifest import and QR/manual add deferred to M8; the Hub
       "start/stop/restart" actions wait for the foreground service (M6).
-- [ ] M4: Hermes adapter + full chat (JSON-RPC/WS, parity with Hermes Pocket).
+- [x] M4: Hermes adapter + full chat (direct tui_gateway WS JSON-RPC client;
+      wire-event mapper into the shared ChatReducer; chat screen with
+      streaming text, thinking lines, tool cards, usage, recovery states).
+      Partials, honest: markdown rendering of assistant text stays plain-text
+      until the polish milestone; settings-token sits in DataStore until the
+      M6 Keystore vault; app-side approvals UI arrives with M5 (events land as
+      ApprovalRequested chat events meanwhile); session browser is M5/M6.
 - [ ] M5: Claude Code adapter via bridge (stream-json, approvals, sessions).
 - [ ] M6: sessions list, projects, task desk, notifications, foreground service.
 - [ ] M7: skills, plugins, MCP, tools/permissions, providers/models, cron, memory, env.

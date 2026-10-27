@@ -20,6 +20,14 @@
     <string name="hub_port_label">پورت پل</string>
     <string name="hub_token_label">توکن پل</string>
     <string name="hub_bridge_hint">در ترموکس اجرا کنید: .harnesshub/bridge/bridge.js — پورت را با BRIDGE_PORT چاپ می‌کند و توکن در فایل .harnesshub/bridge-token است.</string>
+    <string name="chat_unconfigured">ایجنت هرمز هنوز متصل نشده. در ترموکس «hermes dashboard» را اجرا کنید و سپس پورت (۹۱۱۹) و توکن نشست آن را این‌جا بدهید.</string>
+    <string name="chat_open_setup">راه‌اندازی هرمز</string>
+    <string name="chat_error_prefix">خطای چت: %1$s</string>
+    <string name="chat_reconnecting">اتصال قطع شد — در حال دریافت دوباره…</string>
+    <string name="chat_input_hint">به ایجنت پیام بدهید…</string>
+    <string name="chat_send">فرستادن</string>
+    <string name="chat_stop">توقف</string>
+    <string name="chat_retry">تلاش دوباره</string>
     <string name="wizard_title">راه‌اندازی ترموکس</string>
     <string name="wizard_intro">هفت گام. هر گام نتیجه می‌دهد و راه‌حل نشان می‌دهد؛ آنچه اپ می‌تواند را اپ خودش انجام می‌دهد.</string>
     <string name="wizard_recheck">بررسی دوباره</string>

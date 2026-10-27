@@ -20,6 +20,14 @@
     <string name="hub_port_label">Bridge port</string>
     <string name="hub_token_label">Bridge token</string>
     <string name="hub_bridge_hint">Run ~/.harnesshub/bridge/bridge.js in Termux; it prints BRIDGE_PORT=&lt;port&gt; and keeps the token in ~/.harnesshub/bridge-token.</string>
+    <string name="chat_unconfigured">Hermes agent not connected yet. Run `hermes dashboard` in Termux, then paste its port (9119) and session token.</string>
+    <string name="chat_open_setup">Hermes setup</string>
+    <string name="chat_error_prefix">Chat error: %1$s</string>
+    <string name="chat_reconnecting">Connection lost — reconnecting…</string>
+    <string name="chat_input_hint">Message the agent…</string>
+    <string name="chat_send">Send</string>
+    <string name="chat_stop">Stop</string>
+    <string name="chat_retry">Retry</string>
     <string name="wizard_title">Termux setup</string>
     <string name="wizard_intro">Seven steps. Each one shows pass/fail with a fix hint; the app drives what it can itself.</string>
     <string name="wizard_recheck">Re-check</string>
