@@ -45,6 +45,9 @@ dependencies {
     implementation(project(":core:model"))
     implementation(project(":core:harness-api"))
     implementation(project(":core:termux"))
+    implementation(project(":core:transport"))
+    implementation(project(":core:discovery"))
+    implementation(libs.okhttp)
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.datastore.preferences)
