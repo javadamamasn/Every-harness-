@@ -10,11 +10,6 @@ import com.harnesshub.spi.ConnectionHandle
 import com.harnesshub.spi.DiscoveryProbe
 import com.harnesshub.spi.HarnessAdapter
 import com.harnesshub.spi.HarnessCredentials
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
-import kotlinx.serialization.json.JsonPrimitive
-import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.put
 
 /**
  * Claude Code adapter. One **turn** is one cli run through the Termux bridge:
@@ -74,6 +69,14 @@ class ClaudeAdapter(
         }
     }
 
+    /** Full turns are produced via [turn]; WS-style connect is not a claude-code concept. */
+    override suspend fun connect(
+        instance: InstanceId,
+        credentials: HarnessCredentials,
+    ): ConnectionHandle = throw UnsupportedOperationException(
+        "claude-code turns run through the bridge executor (see turn()); no live connection handle",
+    )
+
     /**
      * One full turn: executes claude through the bridge and returns the
      * reduced event list for the whole run (streaming glue at M6).
@@ -85,8 +88,7 @@ class ClaudeAdapter(
         timeoutMs: Long = 60_000,
     ): TurnOutcome {
         val outcome = executor.exec(command(prompt, resumeSessionId), timeoutMs)
-        val parser = ClaudeStreamParser()
-        val events = parser.parseAll(outcome.stdout.split("\n"))
+        val events = ClaudeStreamParser().parseAll(outcome.stdout.split("\n"))
         val sessionId = events.firstNotNullOfOrNull { e ->
             (e as? ChatEvent.SessionStarted)?.sessionId
         }
