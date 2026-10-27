@@ -3,6 +3,7 @@ package com.harnesshub.hermes
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
+import com.harnesshub.spi.Capability
 
 class HermesGatewayTest {
     private val adapter = HermesAdapter()
