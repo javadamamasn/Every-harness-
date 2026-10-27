@@ -39,3 +39,13 @@ Append-only log. Format: date — decision — alternatives — reason — verif
   because targetSdk (runtime behavior, what the spec actually cares about) is
   unchanged. Alternatives: downgrade androidx — rejected (lied about versions).
   Verified: AAR metadata check passes.
+
+- 2026-10-27 — **M3 landing.** `core:transport` (OkHttp WS client, hello-auth,
+  req/res correlation, typed discovery.scan) and `core:discovery`
+  (DiscoveryRanker, pure) power the live Hub via a connect-scan-close session —
+  the pinned foreground connection lands with M6. The bridge token sits in
+  DataStore until M6's Keystore vault; it is never logged and only embedded
+  inside the WebSocket hello frame. Verified: CI run 40563515659 green
+  (transport contract tests vs a wire-level fake bridge; discovery ranker
+  tests; full APK assemble); node-conformance run green. MockWebServer
+  shutdown noise is tolerated in the after-hook (documented quirk).
