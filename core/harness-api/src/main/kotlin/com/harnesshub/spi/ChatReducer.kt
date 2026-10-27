@@ -279,7 +279,7 @@ class ChatReducer {
         return null
     }
 
-    private inline fun mapRunningToolCall(state: State, id: String, mapping: (ContentBlock.ToolCall) -> ContentBlock.ToolCall): State =
+    private fun mapRunningToolCall(state: State, id: String, mapping: (ContentBlock.ToolCall) -> ContentBlock.ToolCall): State =
         if (toolCallRunning(state, id)) mapToolCall(state, id, mapping) else state
 
     // ── plumbing ────────────────────────────────────────────────────────────

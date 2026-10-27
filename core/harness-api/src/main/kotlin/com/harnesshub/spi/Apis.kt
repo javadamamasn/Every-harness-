@@ -1,6 +1,8 @@
 package com.harnesshub.spi
 
+import com.harnesshub.model.EventId
 import com.harnesshub.model.InstanceId
+import com.harnesshub.model.SessionId
 import kotlinx.coroutines.flow.Flow
 
 /** Discovery probe contributed by an adapter; the discovery engine runs these. */
