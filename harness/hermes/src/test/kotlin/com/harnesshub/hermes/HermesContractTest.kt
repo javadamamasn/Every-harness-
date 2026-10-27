@@ -76,9 +76,7 @@ class HermesContractTest {
         server.enqueue(
             fakeGateway { fake ->
                 launch {
-                    val first = runCatching {
-                        server.takeRequest(2, java.util.concurrent.TimeUnit.SECONDS)
-                    }.getOrNull()
+                    val first = server.takeRequest(2, java.util.concurrent.TimeUnit.SECONDS)
                     lastRpcSeen = first?.body?.readUtf8()
                     fake.replyEvent("message.start", """{"text":"hi"}""")
                     fake.replyEvent("message.delta", """{"text":"Hel"}""")
@@ -92,16 +90,16 @@ class HermesContractTest {
         )
 
         val port = server.port
-        val adapter = HermesAdapter(gatewayPort = port)
-        // route through our own socket factory so we hit the MockWebServer
+        val adapter = HermesAdapter(gatewayPort = port) // capability wiring exercised in HermesGatewayTest
         val connectUrl = server.url("/api/ws?token=abc").toString().replaceFirst("http", "ws")
         val gateway = HermesGatewayClient { listener ->
             client.newWebSocket(Request.Builder().url(connectUrl).build(), listener)
         }
+        // subscribe BEFORE connecting so no event is lost (SharedFlow has no replay)
+        val collector = async { gateway.wireEvents.take(5).toList() }
         gateway.connect(connectUrl)
         assertTrue(gateway.awaitReady(10_000), "gateway.ready must arrive")
 
-        val collector = async { gateway.wireEvents.take(5).toList() }
         val frames = withTimeout(10_000) { collector.await() }
         assertEquals(listOf("message.start", "message.delta", "message.delta", "message.complete", "reasoning.delta"), frames.map { it.type })
 
@@ -119,7 +117,7 @@ class HermesContractTest {
         server.enqueue(
             fakeGateway { fake ->
                 launch {
-                    val req = server.takeRequest(2, java.util.concurrent.TimeUnit.SECONDS)
+                    val req = server.takeRequest(2, java.util.concurrent.TimeUnit.SECONDS) ?: return@launch
                     val body = req.body.readUtf8()
                     val id = Regex(""""id":(\d+)""").find(body)?.groupValues?.get(1) ?: "1"
                     if (body.contains("session.create")) {

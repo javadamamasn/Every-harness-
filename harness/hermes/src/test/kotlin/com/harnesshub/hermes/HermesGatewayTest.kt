@@ -1,4 +1,4 @@
-package com.harnesshub.spi
+package com.harnesshub.hermes
 
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue

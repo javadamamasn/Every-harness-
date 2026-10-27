@@ -75,12 +75,6 @@ class ChatViewModel(application: Application) {
     }
 
     private fun onEvent(event: ChatEvent) {
-        state = when (event) {
-            is ChatEvent.SessionStarted -> state.copy(
-                sessionId = if (session != null) state.sessionId else session ?: state.sessionId,
-            )
-            else -> state
-        }
         val next = reducer.reduceOne(state, event)
         state = next
         _ui.value = _ui.value.copy(
@@ -88,7 +82,7 @@ class ChatViewModel(application: Application) {
             usageIn = next.usageInputTokens,
             usageOut = next.usageOutputTokens,
             connectionLost = !next.connected,
-            sessionId = session ?: state.sessionId,
+            sessionId = next.sessionId.value.ifBlank { session.orEmpty() },
             error = when (val e = event) {
                 is ChatEvent.ErrorEvent -> if (e.kind == "session") e.message else _ui.value.error
                 else -> _ui.value.error
@@ -132,8 +126,9 @@ class ChatViewModel(application: Application) {
     }
 
     fun dispose() {
-        scope.cancel()
-        connection?.close()
+        val conn = connection
         connection = null
+        scope.cancel()
+        CoroutineScope(Dispatchers.IO).launch { conn?.close() }
     }
 }
