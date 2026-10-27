@@ -19,3 +19,4 @@ rootProject.name = "harness-hub"
 include(":app")
 include(":core:model")
 include(":core:harness-api")
+include(":core:termux")

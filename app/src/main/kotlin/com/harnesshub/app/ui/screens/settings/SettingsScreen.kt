@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -14,13 +15,16 @@ import com.harnesshub.app.R
 
 /** Settings: appearance, security, language and demo mode; grows with each milestone. */
 @Composable
-fun SettingsScreen() {
+fun SettingsScreen(onOpenWizard: () -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp),
-        verticalArrangement = Arrangement.Center,
+        verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         Text(stringResource(R.string.nav_settings), style = MaterialTheme.typography.headlineMedium)
+        Button(onClick = onOpenWizard) {
+            Text(stringResource(R.string.wizard_title))
+        }
     }
 }

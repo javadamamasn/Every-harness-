@@ -11,4 +11,20 @@
     <string name="nav_skills">مهارت‌ها</string>
     <string name="nav_models">مدل‌ها</string>
     <string name="nav_settings">تنظیمات</string>
+    <string name="wizard_title">راه‌اندازی ترموکس</string>
+    <string name="wizard_intro">هفت گام. هر گام نتیجه می‌دهد و راه‌حل نشان می‌دهد؛ آنچه اپ می‌تواند را اپ خودش انجام می‌دهد.</string>
+    <string name="wizard_recheck">بررسی دوباره</string>
+    <string name="wizard_copy">کپی فرمان</string>
+    <string name="wizard_step_install_termux">۱. ترموکس نصب شده</string>
+    <string name="wizard_step_grant_permission">۲. دسترسی RUN_COMMAND داده شده</string>
+    <string name="wizard_step_enable_external_apps">۳. allow-external-apps در .termux/termux.properties فعال است</string>
+    <string name="wizard_step_install_bridge">۴. پل هارنس هاب نصب شده</string>
+    <string name="wizard_step_start_bridge">۵. پل در حال اجراست</string>
+    <string name="wizard_step_wake_lock">۶. بیدارماندن (termux-wake-lock)</string>
+    <string name="wizard_step_health">۷. تست اتصال</string>
+    <string name="wizard_status_done">انجام شد</string>
+    <string name="wizard_status_action">نیاز به اقدام</string>
+    <string name="wizard_status_pending">در انتظار پل</string>
+    <string name="wizard_hint_termux">ترموکس را از F-Droid نصب کنید و وقتی سیستم پرسید اجازه بدهید.</string>
+    <string name="wizard_hint_external_apps">در ترموکس، allow-external-apps=true را به فایل .termux/termux.properties اضافه کنید.</string>
 </resources>

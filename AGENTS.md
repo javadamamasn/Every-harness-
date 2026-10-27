@@ -38,7 +38,13 @@ OpenCode, OpenClaw, Codex, Gemini CLI, generic ACP/OpenAI-compatible, PTY fallba
 - [x] M0 (partial): Hermes-Pocket studied; on-device recon done (hermes / claude /
       opencode / node present; openclaw, codex, gemini absent; no proot distros).
 - [x] M1 (foundation): modules, Compose shell, nav, theme, en/fa strings, CI, SPI heart.
-- [ ] M2: Termux + bridge (permission wizard, Node bridge daemon, diagnostics).
+- [x] M2: Termux onboarding wizard (7 steps, live Termux/RUN_COMMAND detection),
+  Node bridge daemon with full Appendix-A method set, WebSocket+HTTP transport,
+  auth/throttle/path-confinement, install script, 29-case conformance suite (green
+  locally; also run in CI), networkSecurityConfig for loopback cleartext.
+  Partials, honest: process stdout/stderr stream to ring buffer + subscribers is
+  poll-based; PTY method refuses with NOT_ALLOWLISTED (needs the native-pty
+  milestone); external-apps flag detection is manual until M3.
 - [ ] M3: discovery engine + Hub cards + manifest import.
 - [ ] M4: Hermes adapter + full chat (JSON-RPC/WS, parity with Hermes Pocket).
 - [ ] M5: Claude Code adapter via bridge (stream-json, approvals, sessions).

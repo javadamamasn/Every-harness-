@@ -30,6 +30,7 @@ import com.harnesshub.app.ui.screens.models.ModelsScreen
 import com.harnesshub.app.ui.screens.sessions.SessionsScreen
 import com.harnesshub.app.ui.screens.settings.SettingsScreen
 import com.harnesshub.app.ui.screens.skills.SkillsScreen
+import com.harnesshub.app.ui.screens.wizard.WizardScreen
 
 private data class TopDestination(
     val route: String,
@@ -83,7 +84,8 @@ fun HarnessHubNavHost() {
             composable("sessions") { SessionsScreen() }
             composable("skills") { SkillsScreen() }
             composable("models") { ModelsScreen() }
-            composable("settings") { SettingsScreen() }
+            composable("settings") { SettingsScreen(onOpenWizard = { navController.navigate("wizard") }) }
+            composable("wizard") { WizardScreen() }
         }
     }
 }
