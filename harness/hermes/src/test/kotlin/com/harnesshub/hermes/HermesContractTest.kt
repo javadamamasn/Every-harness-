@@ -94,7 +94,6 @@ class HermesContractTest {
             client.newWebSocket(Request.Builder().url(server.url("/api/ws?token=abc")).build(), listener)
         }
         // subscribe BEFORE sending so no streamed event is lost (no replay in SharedFlow)
-        val collector = CompletableDeferred<List<GatewayWireFrame>>()
         val subscription = async {
             gateway.wireEvents.take(6).toList()
         }
