@@ -74,7 +74,7 @@ class ChatReducer {
                 newText = event.text,
                 emptyBlock = { ContentBlock.Text(event.text) },
             )
-            appended.first.copy(lastTextTurnId = event.turnId)
+            appended.copy(lastTextTurnId = event.turnId)
         }
 
         is ChatEvent.ThinkingDelta -> {
@@ -87,7 +87,7 @@ class ChatReducer {
                 newText = event.text,
                 emptyBlock = { ContentBlock.Thinking(event.text) },
             )
-            appended.first.copy(lastThinkingTurnId = event.turnId)
+            appended.copy(lastThinkingTurnId = event.turnId)
         }
 
         is ChatEvent.ThinkingCompleted -> {
