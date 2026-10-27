@@ -33,7 +33,7 @@ class BridgeTransportTest {
 
     @AfterEach
     fun down() {
-        server.shutdown()
+        runCatching { server.shutdown() }
     }
 
     private fun fakeBridge(): MockResponse {
