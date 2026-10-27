@@ -26,7 +26,7 @@ class HermesEventMapper(private val sessionId: () -> String) {
 
         // message.complete re-seals the interim bubble; deltas already rendered,
         // so only step the turn forward (spec: keep what was already rendered).
-        "message.complete" -> ChatEvent.TurnCompleted(currentTurn(), ChatEvent.TurnCompleted.TurnEndReason.STOP)
+        "message.complete" -> ChatEvent.TurnCompleted(currentTurn(), ChatEvent.TurnEndReason.STOP)
 
         "thinking.delta" -> ChatEvent.ThinkingDelta(currentTurn(), text(frame)) // status line, kept for trace
         "reasoning.delta" -> ChatEvent.ThinkingDelta(currentTurn(), text(frame))
