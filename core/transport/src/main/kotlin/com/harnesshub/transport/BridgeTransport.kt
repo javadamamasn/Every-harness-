@@ -144,6 +144,13 @@ class BridgeTransport(
         return env.result ?: throw BridgeException(BridgeError("INTERNAL", "missing result"))
     }
 
+    /** discovery.scan typed helper (bridge returns the payload once, complete). */
+    suspend fun discoveryScan(): List<DiscoveryResult> {
+        val env = requestEnvelope("discovery.scan")
+        if (env.error != null) throw BridgeException(env.error)
+        return BridgeJson.decodeResults(env.result)
+    }
+
     fun close() {
         try {
             socket?.close(1000, "bye")

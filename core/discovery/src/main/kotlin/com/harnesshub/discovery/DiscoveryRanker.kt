@@ -48,7 +48,7 @@ object DiscoveryRanker {
                     confidence = best.coerceIn(0f, 1f),
                 )
             }
-            .sortedWith(compareByDescending<HarnessInstance> { it.confidence }.thenBy { it.displayName.value })
+            .sortedWith(compareByDescending<HarnessInstance> { it.confidence }.thenBy { it.displayName })
     }
 
     /** Folds a second scan (new port or path probe) into an existing list. */
