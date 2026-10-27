@@ -33,6 +33,10 @@ class HermesGatewayClient(
     private val _state = MutableStateFlow<State>(State.Connecting)
     val state: StateFlow<State> = _state.asStateFlow()
 
+    /** Debug ledger of every raw inbound frame (test diagnostics; cheap CopyOnWriteArrayList). */
+    private val rawInbound = java.util.concurrent.CopyOnWriteArrayList<String>()
+    fun rawInboundLines(): List<String> = rawInbound.toList()
+
     private val _events = MutableSharedFlow<GatewayWireFrame>(extraBufferCapacity = 1024)
     val wireEvents: SharedFlow<GatewayWireFrame> = _events.asSharedFlow()
 
@@ -49,6 +53,7 @@ class HermesGatewayClient(
             }
 
             override fun onMessage(webSocket: WebSocket, text: String) {
+                rawInbound.add(text)
                 text.split("\n").forEach { line ->
                     if (line.isNotBlank()) handleLine(line)
                 }

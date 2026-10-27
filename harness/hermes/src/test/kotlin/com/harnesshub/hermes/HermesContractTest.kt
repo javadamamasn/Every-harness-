@@ -109,7 +109,7 @@ class HermesContractTest {
             withTimeout(5_000) { gateway.request("session.create", buildJsonObject { put("source", "chat") }) }
         } catch (_: TimeoutCancellationException) {
             throw AssertionError(
-                "request() stalled. fake received=${lastFake.received.joinToString("|")} fake sent=${lastFake.sent.joinToString("|")} clientState=${gateway.state.value}",
+                "request() stalled. fake received=${lastFake.received.joinToString("|")} fake sent=${lastFake.sent.joinToString("|")} clientState=${gateway.state.value} rawInbound=${gateway.rawInboundLines().joinToString("|")}",
             )
         }
         assertEquals("sess42", (result["session_id"] as? kotlinx.serialization.json.JsonPrimitive)?.content)
@@ -135,7 +135,7 @@ class HermesContractTest {
             }
         } catch (_: TimeoutCancellationException) {
             throw AssertionError(
-                "prompt.submit stalled. fake received=${lastFake.received.joinToString("|")} fake sent=${lastFake.sent.joinToString("|")} clientState=${gateway.state.value}",
+                "prompt.submit stalled. fake received=${lastFake.received.joinToString("|")} fake sent=${lastFake.sent.joinToString("|")} clientState=${gateway.state.value} rawInbound=${gateway.rawInboundLines().joinToString("|")}",
             )
         }
 
