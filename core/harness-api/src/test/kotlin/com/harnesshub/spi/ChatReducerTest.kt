@@ -74,7 +74,7 @@ class ChatReducerTest {
     fun `cancelled turn keeps already rendered content`() {
         var s = ChatReducer.State()
         s = reducer.reduceOne(s, ChatEvent.TextDelta("t1", "partial answer"))
-        s = reducer.reduceOne(s, ChatEvent.TurnCompleted("t1", ChatEvent.TurnCompleted.TurnEndReason.CANCELLED))
+        s = reducer.reduceOne(s, ChatEvent.TurnCompleted("t1", ChatEvent.TurnEndReason.CANCELLED))
         assertEquals("partial answer", (s.messages.last().blocks[0] as ContentBlock.Text).text)
     }
 
@@ -82,7 +82,7 @@ class ChatReducerTest {
     fun `retry appends sibling messages instead of overwriting`() {
         var s = ChatReducer.State()
         s = reducer.reduceOne(s, ChatEvent.TextDelta("t1", "first try"))
-        s = reducer.reduceOne(s, ChatEvent.TurnCompleted("t1", ChatEvent.TurnCompleted.TurnEndReason.STOP))
+        s = reducer.reduceOne(s, ChatEvent.TurnCompleted("t1", ChatEvent.TurnEndReason.STOP))
         s = reducer.reduceOne(s, ChatEvent.TextDelta("t2", "retry"))
         assertEquals(2, s.messages.size)
         assertEquals("first try", (s.messages[0].blocks[0] as ContentBlock.Text).text)
@@ -119,7 +119,7 @@ class ChatReducerTest {
             ChatEvent.TextDelta("t1", "b"),
             ChatEvent.TextDelta("t1", "cdef"),
             ChatEvent.UsageUpdate(2, 3),
-            ChatEvent.TurnCompleted("t1", ChatEvent.TurnCompleted.TurnEndReason.STOP),
+            ChatEvent.TurnCompleted("t1", ChatEvent.TurnEndReason.STOP),
         )
         val permutations = listOf(
             events,

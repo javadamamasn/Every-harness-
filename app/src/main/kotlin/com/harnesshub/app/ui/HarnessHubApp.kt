@@ -1,6 +1,7 @@
 package com.harnesshub.app.ui
 
 import androidx.compose.runtime.Composable
+import com.harnesshub.app.ui.navigation.HarnessHubNavHost
 import com.harnesshub.app.ui.theme.HarnessHubTheme
 
 /** Root composable — navigation shell for the whole app. */
