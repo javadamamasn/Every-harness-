@@ -117,8 +117,12 @@ class HermesContractTest {
         server.enqueue(
             fakeGateway { fake ->
                 launch {
-                    val req = server.takeRequest(2, java.util.concurrent.TimeUnit.SECONDS) ?: return@launch
-                    val body = req.body.readUtf8()
+                    var req = server.takeRequest(2, java.util.concurrent.TimeUnit.SECONDS)
+                    // first recorded request is the WS upgrade itself (no body)
+                    if (req != null && req.body.size == 0L) {
+                        req = server.takeRequest(2, java.util.concurrent.TimeUnit.SECONDS)
+                    }
+                    val body = req?.body?.readUtf8() ?: return@launch
                     val id = Regex(""""id":(\d+)""").find(body)?.groupValues?.get(1) ?: "1"
                     if (body.contains("session.create")) {
                         fake.ws.send("""{"jsonrpc":"2.0","id":$id,"result":{"session_id":"sess42","stored_session_id":"adjacent"}}""")
