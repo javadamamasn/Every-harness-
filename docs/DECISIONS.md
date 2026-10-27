@@ -30,7 +30,7 @@ Append-only log. Format: date — decision — alternatives — reason — verif
 
 - 2026-10-27 — **CI = unit tests + assembleDebug only for M1.** detekt/ktlint/screenshot
   tests join at polish milestones (M10) to keep the first builds fast and stable.
-  Verified: workflow pushed and green (to be confirmed on first run).
+  Verified: run 40551832176 green (test ✓, assembleDebug ✓, APK artifact uploaded).
 
 - 2026-10-27 — **compileSdk 36 with targetSdk 35.** The pinned androidx stack
   (core-ktx 1.18.0, navigation 2.9.8, activity 1.13.0) refuses to compile against
