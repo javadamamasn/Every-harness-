@@ -5,7 +5,7 @@ import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.flow.toList
-import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
@@ -98,7 +98,7 @@ class HermesContractTest {
     private fun url(): String = server.url("/api/ws?token=abc").toString().replaceFirst("http", "ws")
 
     @Test
-    fun `rpc correlation resolves result`() = runTest {
+    fun `rpc correlation resolves result`() = runBlocking {
         server.enqueue(fakeGateway(streamAfterSubmit = false))
         val gateway = HermesGatewayClient { listener ->
             client.newWebSocket(Request.Builder().url(url()).build(), listener)
@@ -116,7 +116,7 @@ class HermesContractTest {
     }
 
     @Test
-    fun `prompt submit streams a full mapped turn`() = runTest {
+    fun `prompt submit streams a full mapped turn`() = runBlocking {
         server.enqueue(fakeGateway(streamAfterSubmit = true))
         val gateway = HermesGatewayClient { listener ->
             client.newWebSocket(Request.Builder().url(url()).build(), listener)
