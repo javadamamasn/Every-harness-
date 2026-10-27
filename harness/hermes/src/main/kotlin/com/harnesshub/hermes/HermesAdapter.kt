@@ -3,6 +3,8 @@ package com.harnesshub.hermes
 import com.harnesshub.model.HarnessId
 import com.harnesshub.model.InstanceId
 import com.harnesshub.model.SessionId
+import com.harnesshub.spi.ConnectionHandle
+import com.harnesshub.spi.HarnessAdapter
 import com.harnesshub.spi.Capability
 import com.harnesshub.spi.HarnessCredentials
 import kotlinx.coroutines.flow.Flow
@@ -16,6 +18,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 import kotlinx.coroutines.flow.flow
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -87,7 +90,7 @@ class HermesConnection(
 
     override val instanceId: InstanceId = InstanceId("hermes")
 
-    private val mapper = HermesEventMapper({ sessionId })
+    private val mapper = HermesEventMapper({ sessionId ?: "" })
 
     /** Unified display stream: mapped gateway events + connection lifecycle. */
     override val events: Flow<com.harnesshub.spi.ChatEvent> = merge(
