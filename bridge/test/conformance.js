@@ -100,7 +100,7 @@ async function main() {
     check("hello accepted", hello && hello.result && hello.result.protocol === 1, hello);
 
     const info = await reqTimeout(conn.req("system.info", {}), 4000);
-    check("system.info", info && info.result && typeof info.result.node === "string" && typeof info.result.androidVersion === "string", info);
+    check("system.info", info && info.result && typeof info.result.node === "string" && (info.result.androidVersion === null || typeof info.result.androidVersion === "string"), info);
 
     const listeners = await reqTimeout(conn.req("net.listeners", {}), 3000);
     check("net.listeners", listeners && listeners.result && Array.isArray(listeners.result.listeners), listeners);

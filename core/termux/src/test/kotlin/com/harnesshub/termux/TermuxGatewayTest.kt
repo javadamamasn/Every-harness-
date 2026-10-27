@@ -46,7 +46,7 @@ class TermuxGatewayTest {
         val state = ready.copy(bridgeReachable = false)
         val steps = TermuxGateway.computeSteps(state)
         assertEquals(TermuxGateway.Status.ACTION, steps[4].status)
-        assertEquals("$HOME/bin/harness-hub-bridge-start", steps[4].command)
+        assertEquals("\$HOME/bin/harness-hub-bridge-start", steps[4].command)
     }
 
     @Test

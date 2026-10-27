@@ -69,7 +69,7 @@ object TermuxGateway {
             WizardStepResult(
                 WizardStep.START_BRIDGE,
                 statusOf(backed(state.externalAppsEnabled, state.bridgeReachable)),
-                command = "$HOME/bin/harness-hub-bridge-start",
+                command = "\$HOME/bin/harness-hub-bridge-start",
             ),
             WizardStepResult(
                 WizardStep.WAKE_LOCK,
