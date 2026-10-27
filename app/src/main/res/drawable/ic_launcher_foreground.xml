@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- A node in the center linked outward: hub of harnesses -->
+    <path
+        android:fillColor="#FF7C6FF0"
+        android:pathData="M54,54m-10,0a10,10 0,1 1,20 0a10,10 0,1 1,-20 0" />
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#FFA79BFF"
+        android:strokeWidth="3"
+        android:pathData="M54,44 L54,28 M64,54 L80,54 M54,64 L54,80 M44,54 L28,54" />
+</vector>

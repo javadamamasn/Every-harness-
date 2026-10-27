@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">هارنس هاب</string>
+    <string name="hub_title">مرکز کنترل</string>
+    <string name="hub_empty_title">هنوز هیچ هارنسی پیدا نشد</string>
+    <string name="hub_empty_message">پس از بالا آمدن پل ترموکس دوباره اسکن کنید. هر هارنس ایجنت هوش مصنوعی روی همین گوشی این‌جا ظاهر می‌شود.</string>
+    <string name="hub_rescan">اسکن دوباره</string>
+    <string name="nav_hub">هاب</string>
+    <string name="nav_chat">گفت‌وگو</string>
+    <string name="nav_sessions">نشست‌ها</string>
+    <string name="nav_skills">مهارت‌ها</string>
+    <string name="nav_models">مدل‌ها</string>
+    <string name="nav_settings">تنظیمات</string>
+</resources>

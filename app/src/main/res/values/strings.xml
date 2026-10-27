@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Harness Hub</string>
+    <string name="hub_title">Mission control</string>
+    <string name="hub_empty_title">No harness discovered yet</string>
+    <string name="hub_empty_message">Run a rescan once the Termux bridge is up. Every AI agent harness on this phone shows up here.</string>
+    <string name="hub_rescan">Rescan</string>
+    <string name="nav_hub">Hub</string>
+    <string name="nav_chat">Chat</string>
+    <string name="nav_sessions">Sessions</string>
+    <string name="nav_skills">Skills</string>
+    <string name="nav_models">Models</string>
+    <string name="nav_settings">Settings</string>
+</resources>
