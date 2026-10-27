@@ -349,6 +349,251 @@ function methodProotList(cb) {
   });
 }
 
+/**
+ * Zero-setup Hermes (section 17): find a running `hermes dashboard` process,
+ * read its port from its own cmdline and the session token from its
+ * environment; if none is running, start one (detached) and wait until the
+ * token becomes visible. Never stored by the bridge; the app vaults it.
+ */
+function methodHermesSetup(cb) {
+  const started = Date.now();
+  const prefixDir = path.dirname(path.dirname(process.execPath));
+  const hermesBin = path.join(prefixDir, "bin", "hermes");
+
+  const findDashboard = () => {
+    let found = null;
+    for (const n of fs.readdirSync("/proc")) {
+      if (!/^\d+$/.test(n)) continue;
+      let c;
+      try { c = fs.readFileSync(`/proc/${n}/cmdline`, "utf8"); } catch (_) { continue; }
+      const cmdline = c.replace(/\u0000/g, " ").trim();
+      if (!/hermes/.test(cmdline) || !/dashboard/.test(cmdline)) continue;
+      const port = (cmdline.match(/--port\s+(\d+)/) || [])[1] || "9119";
+      let token = null;
+      try {
+        const envText = fs.readFileSync(`/proc/${n}/environ`, "utf8");
+        const m = envText.split("\u0000").find((e) => e.startsWith("HERMES_DASHBOARD_SESSION_TOKEN="));
+        if (m) token = m.slice("HERMES_DASHBOARD_SESSION_TOKEN=".length);
+      } catch (_) { /* env not readable */ }
+      if (token) { found = { pid: Number(n), port: Number(port), token }; break; }
+    }
+    return found;
+  };
+
+  const existing = findDashboard();
+  if (existing) {
+    audit("hermes.setup.found", { pid: existing.pid, port: existing.port });
+    return cb(null, { running: true, startedByBridge: false, port: existing.port, pid: existing.pid, token: existing.token });
+  }
+  if (fs.existsSync(hermesBin)) {
+    const port = 9119;
+    audit("hermes.setup.starting", { port });
+    let child;
+    try {
+      child = spawn(hermesBin, ["dashboard", "--host", "127.0.0.1", "--port", String(port), "--no-open"], {
+        detached: true,
+        stdio: "ignore",
+        env: process.env,
+      });
+      child.unref();
+    } catch (e) {
+      return cb({ code: "INTERNAL", message: "could not start hermes dashboard" });
+    }
+    const poll = () => {
+      const got = findDashboard();
+      if (got) {
+        audit("hermes.setup.started", { port: got.port, ms: Date.now() - started });
+        return cb(null, { running: true, startedByBridge: true, port: got.port, pid: got.pid, token: got.token });
+      }
+      if (Date.now() - started > 25000) {
+        return cb({ code: "TIMEOUT", message: "hermes dashboard did not expose its token in time" });
+      }
+      setTimeout(poll, 800);
+    };
+    setTimeout(poll, 800);
+    return undefined;
+  }
+  cb({ code: "NOT_FOUND", message: "hermes CLI is not installed; install it in Termux first" });
+}
+
+/** Settings-gated arbitrary-exec flag (see Appendix A exec.run). Biometric confirmation happens in the app. */
+function methodExecFlag(params, cb) {
+  const on = !!params.on;
+  try {
+    if (on) fs.writeFileSync(EXEC_FLAG, new Date().toISOString() + "\n", { mode: 0o600 });
+    else fs.rmSync(EXEC_FLAG, { force: true });
+  } catch (e) {
+    return cb({ code: "INTERNAL", message: "could not change the exec flag" });
+  }
+  audit("bridge.execFlag", { on });
+  cb(null, { changed: true, execFlag: fs.existsSync(EXEC_FLAG) });
+}
+
+/** Appendix D + section 19: shared state files under ~/.harnesshub. */
+const RESOURCE_MODE_FILE = path.join(HUB_DIR, "resource-mode.json");
+const HARNESS_REGISTRY_FILE = path.join(HUB_DIR, "harness-registry.json");
+
+function loadJson(file, fallback) {
+  try { return JSON.parse(fs.readFileSync(file, "utf8")); } catch (_) { return fallback; }
+}
+function persistJson(file, value) {
+  try { fs.writeFileSync(file, JSON.stringify(value, null, 2), { mode: 0o600 }); } catch (_) {}
+}
+
+/** Resource modes: exclusive (default) | smart | manual (section 19). */
+function resourceMode() {
+  const m = loadJson(RESOURCE_MODE_FILE, {});
+  return {
+    mode: ["exclusive", "smart", "manual"].includes(m.mode) ? m.mode : "exclusive",
+    smartLimit: Number.isInteger(m.smartLimit) && m.smartLimit > 0 ? m.smartLimit : 1,
+    idleTimeoutSec: Number.isInteger(m.idleTimeoutSec) && m.idleTimeoutSec > 4 ? m.idleTimeoutSec : 600,
+  };
+}
+
+/** Reads /proc/<pid>/stat memory columns + status free memory. */
+function procMemKB(pid) {
+  try {
+    const stat = fs.readFileSync(`/proc/${pid}/stat`, "utf8");
+    const parts = stat.slice(stat.lastIndexOf(")") + 2).split(" ");
+    return Math.round((Number(parts[22]) || 0) * 4096 / 1024); // rss pages -> KB
+  } catch (_) { return 0; }
+}
+
+function methodResources(cb) {
+  let memTotal = 0, memAvailable = 0;
+  try {
+    for (const line of fs.readFileSync("/proc/meminfo", "utf8").split("\n")) {
+      const mTotal = line.match(/^MemTotal:\s+(\d+) kB/);
+      const mAvail = line.match(/^MemAvailable:\s+(\d+) kB/);
+      if (mTotal) memTotal = Number(mTotal[1]);
+      if (mAvail) memAvailable = Number(mAvail[1]);
+    }
+  } catch (_) { /* /proc off-limits (should not happen on Termux) */ }
+  const harnesses = methodHarnessListInternal();
+  cb(null, { memTotalKB: memTotal, memAvailableKB: memAvailable, harnesses });
+}
+
+/** List of harness processes this bridge knows about (per-name registry). */
+function methodHarnessListInternal() {
+  const reg = loadJson(HARNESS_REGISTRY_FILE, {});
+  const out = [];
+  for (const [name, entry] of Object.entries(reg)) {
+    if (!entry || typeof entry.pid !== "number") continue;
+    let alive = false;
+    let cmdline = "";
+    try {
+      cmdline = fs.readFileSync(`/proc/${entry.pid}/cmdline`, "utf8").replace(/\u0000/g, " ").trim();
+      alive = cmdline.length > 0;
+    } catch (_) { alive = false; }
+    const rssKB = alive ? procMemKB(entry.pid) : 0;
+    out.push({
+      name,
+      pid: entry.pid,
+      alive,
+      rssKB,
+      startedAt: entry.startedAt || null,
+      state: alive ? "Running" : "Stopped",
+    });
+  }
+  return out;
+}
+
+function methodHarnessList(cb) {
+  cb(null, { harnesses: methodHarnessListInternal(), mode: resourceMode() });
+}
+
+function methodHarnessRegister(params, cb) {
+  const name = String(params.name || "");
+  const pid = Number(params.pid);
+  if (!/^[A-Za-z0-9_-]+$/.test(name) || !Number.isInteger(pid) || pid <= 0) {
+    return cb({ code: "INTERNAL", message: "harness.register expects name and pid" });
+  }
+  const reg = loadJson(HARNESS_REGISTRY_FILE, {});
+  reg[name] = { pid, startedAt: new Date().toISOString() };
+  persistJson(HARNESS_REGISTRY_FILE, reg);
+  audit("harness.register", { name, pid });
+  cb(null, { ok: true });
+}
+
+function readTree(pids, skipRoot) {
+  const all = new Set();
+  for (const p of fs.readdirSync("/proc")) {
+    if (!/^\d+$/.test(p)) continue;
+    try {
+      const stat = fs.readFileSync(`/proc/${p}/stat`, "utf8");
+      const m = stat.match(/^\d+ \((.*?)\) . .* (\d+)$/);
+      if (m) all.add({ pid: Number(p), ppid: Number(m[2]) });
+    } catch (_) { /* gone */ }
+  }
+  return all;
+}
+
+/** Section 19 stop: SIGTERM the tree, short wait, SIGKILL survivors. */
+function stopTree(rootPid, waitMs, done) {
+  const snapshot = () => {
+    const procs = [];
+    for (const p of fs.readdirSync("/proc")) {
+      if (!/^\d+$/.test(p)) continue;
+      try {
+        const stat = fs.readFileSync(`/proc/${p}/stat`, "utf8");
+        const m = stat.match(/^\d+ \((.*?)\) .*? (\d+)$/);
+        if (m) procs.push({ pid: Number(p), ppid: Number(m[2]) });
+      } catch (_) { /* gone */ }
+    }
+    const children = (pid) => procs.filter((x) => x.ppid === pid).map((x) => x.pid);
+    const tree = [];
+    const walk = (pid) => { tree.push(pid); for (const c of children(pid)) walk(c); };
+    walk(rootPid);
+    return tree;
+  };
+  const tree = snapshot();
+  let signaled = 0;
+  for (const pid of tree) {
+    try { process.kill(pid, "SIGTERM"); signaled++; } catch (_) { /* gone */ }
+  }
+  setTimeout(() => {
+    let killed = 0;
+    for (const pid of snapshot()) {
+      try { process.kill(pid, "SIGKILL"); killed++; } catch (_) { /* gone */ }
+    }
+    done({ signaled, killed, waitedMs: waitMs });
+  }, waitMs);
+}
+
+function methodHarnessStop(params, cb) {
+  const name = String(params.name || "");
+  const reg = loadJson(HARNESS_REGISTRY_FILE, {});
+  const entry = reg[name];
+  if (!entry || typeof entry.pid !== "number") {
+    return cb({ code: "NOT_FOUND", message: `harness ${name} is not registered` });
+  }
+  const alive = (() => { try { return !!fs.readFileSync(`/proc/${entry.pid}/cmdline`, "utf8"); } catch (_) { return false; } })();
+  if (!alive) {
+    delete reg[name]; persistJson(HARNESS_REGISTRY_FILE, reg);
+    return cb(null, { stopped: true, already: true });
+  }
+  const waitMs = Math.min(Math.max(Number(params.waitMs) || 1500, 200), 10000);
+  audit("harness.stop", { name, pid: entry.pid });
+  stopTree(entry.pid, waitMs, (res) => {
+    delete reg[name]; persistJson(HARNESS_REGISTRY_FILE, reg);
+    cb(null, { stopped: true, ...res });
+  });
+}
+
+/** Persisted resource mode; app Settings writes it. */
+function methodResourceMode(params, cb) {
+  if (params && (params.mode != null || params.smartLimit != null || params.idleTimeoutSec != null)) {
+    const current = resourceMode();
+    const next = { ...current, ...params };
+    if (!["exclusive", "smart", "manual"].includes(next.mode)) {
+      return cb({ code: "INTERNAL", message: "invalid resource mode" });
+    }
+    persistJson(RESOURCE_MODE_FILE, next);
+    audit("bridge.resourceMode", next);
+  }
+  cb(null, resourceMode());
+}
+
 function methodNetListeners(cb) {
   const parsed = [];
   const LOOPBACKS = new Set(["0100007F", "00000000000000000000000000000001", "00000000000000000000000000000000"]);
@@ -831,14 +1076,36 @@ function dispatch(session, env, roots, allowlist) {
     case "proot.list":
       methodProotList(cb);
       return;
-    case "net.listeners":
-      methodNetListeners(cb);
-      return;
     case "exec.run":
       methodExec(roots, params, cb);
       return;
     case "discovery.scan":
       methodDiscovery(cb, evtCb);
+      return;
+    case "hermes.setup":
+      methodHermesSetup(cb);
+      return;
+    case "system.resources":
+      methodResources(cb);
+      return;
+    case "harness.list":
+      methodHarnessList(cb);
+      return;
+    case "harness.register":
+      methodHarnessRegister(params, cb);
+      return;
+    case "harness.stop":
+      methodHarnessStop(params, cb);
+      return;
+    case "bridge.resourceMode":
+      methodResourceMode(params, cb);
+      return;
+
+    case "bridge.execFlag":
+      methodExecFlag(params, cb);
+      return;
+    case "net.listeners":
+      methodNetListeners(cb);
       return;
     default:
       cb({ code: "NOT_FOUND", message: `Unknown method: ${method}` });

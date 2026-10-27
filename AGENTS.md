@@ -72,7 +72,17 @@ OpenCode, OpenClaw, Codex, Gemini CLI, generic ACP/OpenAI-compatible, PTY fallba
     yet); app wiring of the claude engine into ChatScreen waits for the M6
     engine work; exec.run stays denied until the Settings gate sets
     ~/.harnesshub/allow-exec (biometric, verified NOT_ALLOWLISTED otherwise).
-- [ ] M6: sessions list, projects, task desk, notifications, foreground service.
+- [~] M6 (in flight): resource-aware lifecycle (section 19) + Hermes zero-setup.
+      Bridge now ships verified: system.resources (meminfo + per-harness RSS),
+      harness.list/register/stop (SIGTERM tree -> short wait -> SIGKILL),
+      bridge.resourceMode (exclusive|smart|manual persisted),
+      hermes.setup (zero-setup: finds running `hermes dashboard`, reads its port
+      from cmdline and HERMES_DASHBOARD_SESSION_TOKEN from its /proc env;
+      starts it when absent) and bridge.execFlag (allow-exec gate). Conformance
+      suite grown to 33 green cases (run on device + CI).
+      Remaining for M6: app-side vault wiring (hermes.setup → Keystore-wrapped
+      store), foreground service, sessions/project/task screens, opencode/codex
+      direct adapters (section 20) as M6b/M7.
 - [ ] M7: skills, plugins, MCP, tools/permissions, providers/models, cron, memory, env.
 - [ ] M8: OpenClaw, Codex, Gemini CLI, OpenCode, generic OpenAI-compatible, ACP, PTY.
 - [ ] M9: files, terminal, logs/diagnostics, usage.

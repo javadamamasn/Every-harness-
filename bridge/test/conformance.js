@@ -189,6 +189,25 @@ async function main() {
     stopBridge(bridgeB);
   }
 
+  { // M6 section-19 resource lifecycle (memory, registry, sigterm/sigkill stop)
+    const bridgeC = await startBridge();
+    const c = await connect({ port: bridgeC.port });
+    const cToken = fs.readFileSync(path.join(bridgeC.home, ".harnesshub/bridge-token"), "utf8").trim();
+    await reqTimeout(c.hello(cToken), 3000);
+    const mode = await reqTimeout(c.req("bridge.resourceMode", { mode: "smart", smartLimit: 2 }), 3000);
+    check("resourceMode persisted", mode.result && mode.result.mode === "smart" && mode.result.smartLimit === 2, mode);
+
+    // register ourselves as a fake harness and read resources
+    const mine = process.pid;
+    const reg = await reqTimeout(c.req("harness.register", { name: "fake-harness", pid: mine }), 3000);
+    check("harness.register", reg.result && reg.result.ok === true, reg);
+    const res = await reqTimeout(c.req("system.resources", {}), 3000);
+    const fake = res.result.harnesses.find((h) => h.name === "fake-harness");
+    check("system.resources ties registry to mem", fake && fake.alive === true && fake.rssKB > 0, res);
+    check("meminfo parsed", res.result.memTotalKB > 0 && res.result.memAvailableKB > 0, res);
+    stopBridge(bridgeC);
+  }
+
   console.log(`\n${passed} passed, ${failures} failed`);
   process.exitCode = failures ? 1 : 0;
 }
