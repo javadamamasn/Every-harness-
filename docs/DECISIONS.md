@@ -69,3 +69,16 @@ Append-only log. Format: date — decision — alternatives — reason — verif
   node-conformance green. Note: contract tests run on `runBlocking` (real IO) —
   `runTest`'s virtual clock stalls real-IO WS round-trips; same pattern as the
   transport suite.
+
+- 2026-10-27 — **M5: Claude Code adapter (Kotlin-only surface; bridge stays JS).**
+  User decision: everything app-side stays Kotlin; the Node bridge daemon is kept as-is — a Kotlin/JVM port was
+  evaluated (Termux has openjdk-21) and deferred; protocol Appendix A is
+  language-agnostic so it can be revisited at M9+ if ever needed.
+  Verified live against claude 2.1.112: `--help` flags (stream-json needs
+  `--verbose`; `--input/output-format stream-json`; `--resume <id>`;
+  `--permission-mode`), and a real one-shot run's 4-line sample
+  (system/init{session_id,tools} → system/status → assistant{content[],
+  usage} → result{is_error,result,usage,total_cost_usd,duration_ms}).
+  The adapter runs CLI through the bridge's `exec.run` (verified denial:
+  NOT_ALLOWLISTED until `~/.harnesshub/allow-exec` gate exists in Settings).
+  Live token streaming arrives with the bridge process subscription (M6).

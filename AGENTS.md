@@ -56,7 +56,22 @@ OpenCode, OpenClaw, Codex, Gemini CLI, generic ACP/OpenAI-compatible, PTY fallba
       until the polish milestone; settings-token sits in DataStore until the
       M6 Keystore vault; app-side approvals UI arrives with M5 (events land as
       ApprovalRequested chat events meanwhile); session browser is M5/M6.
-- [ ] M5: Claude Code adapter via bridge (stream-json, approvals, sessions).
+- [x] M5: Claude Code adapter via the bridge.
+  - `harness:claude` — ClaudeStreamParser (claude 2.1.112 stream-json shapes
+    verified live: system/init → SessionStarted, assistant text/thinking/tool_use
+    → deltas+tool calls, user tool_result → ToolResult, wstream_event partial
+    deltas, result → UsageUpdate(+cost)/ErrorEvent(is_error)), command builder
+    (`-p … --output-format stream-json --include-partial-messages --verbose
+    [--resume id]` — flags verified from cli --help), BridgeExecutor port +
+    turn() helper. Unit tests land with this commit.
+  - Decision (user): the Node bridge stays JS — no Kotlin port; Kotlin-only
+    surface is app-side (recorded in docs/DECISIONS.md).
+  - Partials, honest: claude turns reach the executor as one-shot exec.run —
+    live token streaming waits for the bridge process-subscription (M6);
+    interactive approvals ask inside the CLI itself (no app-side approval UI
+    yet); app wiring of the claude engine into ChatScreen waits for the M6
+    engine work; exec.run stays denied until the Settings gate sets
+    ~/.harnesshub/allow-exec (biometric, verified NOT_ALLOWLISTED otherwise).
 - [ ] M6: sessions list, projects, task desk, notifications, foreground service.
 - [ ] M7: skills, plugins, MCP, tools/permissions, providers/models, cron, memory, env.
 - [ ] M8: OpenClaw, Codex, Gemini CLI, OpenCode, generic OpenAI-compatible, ACP, PTY.
