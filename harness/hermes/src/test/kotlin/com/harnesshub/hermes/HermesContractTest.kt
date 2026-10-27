@@ -108,9 +108,9 @@ class HermesContractTest {
         val result = try {
             withTimeout(5_000) { gateway.request("session.create", buildJsonObject { put("source", "chat") }) }
         } catch (_: TimeoutCancellationException) {
-            throw AssertionError(
-                "request() stalled. fake received=${lastFake.received.joinToString("|")} fake sent=${lastFake.sent.joinToString("|")} clientState=${gateway.state.value} rawInbound=${gateway.rawInboundLines().joinToString("|")}",
-            )
+            val diag = "STALLED-DBG request fake-received=${lastFake.received} fake-sent=${lastFake.sent} state=${gateway.state.value} rawInbound=${gateway.rawInboundLines()}"
+            println(diag)
+            throw AssertionError(diag)
         }
         assertEquals("sess42", (result["session_id"] as? kotlinx.serialization.json.JsonPrimitive)?.content)
     }
@@ -134,9 +134,9 @@ class HermesContractTest {
                 })
             }
         } catch (_: TimeoutCancellationException) {
-            throw AssertionError(
-                "prompt.submit stalled. fake received=${lastFake.received.joinToString("|")} fake sent=${lastFake.sent.joinToString("|")} clientState=${gateway.state.value} rawInbound=${gateway.rawInboundLines().joinToString("|")}",
-            )
+            val diag = "STALLED-DBG submit fake-received=${lastFake.received} fake-sent=${lastFake.sent} state=${gateway.state.value} rawInbound=${gateway.rawInboundLines()}"
+            println(diag)
+            throw AssertionError(diag)
         }
 
         val frames = withTimeout(10_000) { subscription.await() }
