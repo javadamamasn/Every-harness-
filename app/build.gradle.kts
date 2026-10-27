@@ -6,7 +6,7 @@ plugins {
 
 android {
     namespace = "com.harnesshub.app"
-    compileSdk = 35
+    compileSdk = 36 // androidx stack (core 1.18, nav 2.9.8) requires 36; targetSdk stays 35
 
     defaultConfig {
         applicationId = "com.harnesshub.app"

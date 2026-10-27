@@ -31,3 +31,11 @@ Append-only log. Format: date — decision — alternatives — reason — verif
 - 2026-10-27 — **CI = unit tests + assembleDebug only for M1.** detekt/ktlint/screenshot
   tests join at polish milestones (M10) to keep the first builds fast and stable.
   Verified: workflow pushed and green (to be confirmed on first run).
+
+- 2026-10-27 — **compileSdk 36 with targetSdk 35.** The pinned androidx stack
+  (core-ktx 1.18.0, navigation 2.9.8, activity 1.13.0) refuses to compile against
+  android-35 AAR-metadata (verified by the :app:checkDebugAarMetadata failure). The
+  build spec asked for compileSdk 35 + targetSdk 35; compileSdk was raised to 36
+  because targetSdk (runtime behavior, what the spec actually cares about) is
+  unchanged. Alternatives: downgrade androidx — rejected (lied about versions).
+  Verified: AAR metadata check passes.
