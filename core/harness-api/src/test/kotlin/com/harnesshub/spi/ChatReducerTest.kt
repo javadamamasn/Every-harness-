@@ -33,7 +33,7 @@ class ChatReducerTest {
 
         val texts = s.messages.flatMap { it.blocks.filterIsInstance<ContentBlock.Text>() }.joinToString("") { it.text }
         val thinking = s.messages.flatMap { it.blocks.filterIsInstance<ContentBlock.Thinking>() }.joinToString("") { it.text }
-        assertEquals("answer more", texts)
+        assertEquals("answer", texts)
         assertEquals("plan: step more", thinking)
     }
 

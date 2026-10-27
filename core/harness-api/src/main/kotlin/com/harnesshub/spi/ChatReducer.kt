@@ -31,6 +31,10 @@ class ChatReducer {
         val usageInputTokens: Long = 0,
         val usageOutputTokens: Long = 0,
         val connected: Boolean = true,
+        /** Owning turn of the trailing text block — a new turn opens a sibling message. */
+        val lastTextTurnId: String? = null,
+        /** Owning turn of the trailing thinking block. */
+        val lastThinkingTurnId: String? = null,
     )
 
     private var messageCounter = 0L
@@ -49,7 +53,9 @@ class ChatReducer {
             else current.copy(sessionId = SessionId(event.sessionId))
 
         is ChatEvent.TurnStarted -> current
-        is ChatEvent.TurnCompleted -> current // keeps everything already rendered
+        // A completed turn ends streaming buffering; the next delta (a retry or
+        // follow-up) opens a sibling message instead of appending to the old one.
+        is ChatEvent.TurnCompleted -> current.copy(lastTextTurnId = null, lastThinkingTurnId = null)
 
         is ChatEvent.ConnectionLost -> current.copy(connected = false)
         is ChatEvent.ConnectionResumed -> current.copy(connected = true)
@@ -58,21 +64,31 @@ class ChatReducer {
             usageOutputTokens = current.usageOutputTokens + event.outputTokens,
         )
 
-        is ChatEvent.TextDelta -> appendDelta(
-            current,
-            matches = { it is ContentBlock.Text },
-            toBlock = { old, text -> (old as ContentBlock.Text).copy(text = old.text + text) },
-            newText = event.text,
-            emptyBlock = { ContentBlock.Text(event.text) },
-        )
+        is ChatEvent.TextDelta -> {
+            val appended = appendStreamingDelta(
+                current,
+                turnId = event.turnId,
+                trackedTurnId = current.lastTextTurnId,
+                matches = { it is ContentBlock.Text },
+                toBlock = { old, text -> (old as ContentBlock.Text).copy(text = old.text + text) },
+                newText = event.text,
+                emptyBlock = { ContentBlock.Text(event.text) },
+            )
+            appended.first.copy(lastTextTurnId = event.turnId)
+        }
 
-        is ChatEvent.ThinkingDelta -> appendDelta(
-            current,
-            matches = { it is ContentBlock.Thinking && !it.completed },
-            toBlock = { old, text -> (old as ContentBlock.Thinking).copy(text = old.text + text) },
-            newText = event.text,
-            emptyBlock = { ContentBlock.Thinking(event.text) },
-        )
+        is ChatEvent.ThinkingDelta -> {
+            val appended = appendStreamingDelta(
+                current,
+                turnId = event.turnId,
+                trackedTurnId = current.lastThinkingTurnId,
+                matches = { it is ContentBlock.Thinking && !it.completed },
+                toBlock = { old, text -> (old as ContentBlock.Thinking).copy(text = old.text + text) },
+                newText = event.text,
+                emptyBlock = { ContentBlock.Thinking(event.text) },
+            )
+            appended.first.copy(lastThinkingTurnId = event.turnId)
+        }
 
         is ChatEvent.ThinkingCompleted -> {
             val msgIdx = current.messages.indexOfLast { m -> m.blocks.any { it is ContentBlock.Thinking && !it.completed } }
@@ -220,26 +236,34 @@ class ChatReducer {
 
     /**
      * Appends [newText] to the matching trailing block of the last assistant
-     * message; if none matches (or there is none), opens a new message with
-     * [emptyBlock] so nothing is ever lost when thinking and text interleave.
+     * message when that block belongs to the currently streaming turn
+     * ([trackedTurnId] == [turnId]); otherwise opens a new message with
+     * [emptyBlock] so nothing is ever lost when thinking and text interleave,
+     * a turn is cancelled, or a retry starts a sibling.
      */
-    private inline fun appendDelta(
+    private inline fun appendStreamingDelta(
         state: State,
+        turnId: String,
+        trackedTurnId: String?,
         matches: (ContentBlock) -> Boolean,
         toBlock: (ContentBlock, String) -> ContentBlock,
         newText: String,
         emptyBlock: () -> ContentBlock,
     ): State {
         val msgIdx = state.messages.indexOfLast { it.role == "assistant" }
-        val blocksIdx = if (msgIdx < 0) -1 else state.messages[msgIdx].blocks.indexOfLast(matches)
-        if (msgIdx < 0 || blocksIdx < 0) {
+        val trailing = if (msgIdx < 0) null else state.messages[msgIdx].blocks.lastOrNull()
+        val canAppend = msgIdx >= 0 &&
+            trailing != null &&
+            matches(trailing) &&
+            trackedTurnId == turnId
+        if (!canAppend) {
             return addMessage(
                 state,
                 Message(id = nextMessageId(), sessionId = state.sessionId, role = "assistant", blocks = listOf(emptyBlock())),
             )
         }
         val blocks = state.messages[msgIdx].blocks.toMutableList()
-        blocks[blocksIdx] = toBlock(blocks[blocksIdx], newText)
+        blocks[blocks.lastIndex] = toBlock(blocks.last(), newText)
         return replaceMessageBlocks(state, msgIdx, blocks)
     }
 
