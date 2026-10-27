@@ -25,7 +25,7 @@ import java.util.concurrent.CopyOnWriteArrayList
 /**
  * Wire-level contract tests for the Hermes adapter: a scripted fake gateway
  * speaks the ND-JSON JSON-RPC shapes verified live in M4 and the adapter must
- * land on the unified ChatEvent stream. Diagnostics expose which side stalled
+ * land on the unified ChatEvent stream. Ledgers expose which side stalled
  * (never invent success).
  */
 class HermesContractTest {
@@ -33,8 +33,7 @@ class HermesContractTest {
     private lateinit var server: MockWebServer
     private lateinit var client: OkHttpClient
 
-    /** Everything the fake sees and sends — asserted on stalled runs. */
-    class FakeState {
+    private class FakeState {
         val received = CopyOnWriteArrayList<String>()
         val sent = CopyOnWriteArrayList<String>()
     }
@@ -58,28 +57,33 @@ class HermesContractTest {
     private fun fakeGateway(streamAfterSubmit: Boolean): MockResponse {
         val response = MockResponse().withWebSocketUpgrade(object : WebSocketListener() {
             override fun onOpen(webSocket: WebSocket, response: okhttp3.Response) {
-                webSocket.send("""{"jsonrpc":"2.0","method":"event","params":{"type":"gateway.ready","payload":{}}}""")
+                send(webSocket, "{\"jsonrpc\":\"2.0\",\"method\":\"event\",\"params\":{\"type\":\"gateway.ready\",\"payload\":{}}}")
             }
 
             override fun onMessage(webSocket: WebSocket, text: String) {
                 lastFake.received.add(text)
                 val id = Regex("\"id\":(\\d+)").find(text)?.groupValues?.get(1) ?: "1"
                 when {
-                    text.contains("session.create") -> send(webSocket,
-                        """{"jsonrpc":"2.0","id":$id,"result":{"session_id":"sess42","stored_session_id":"20261027_x","info":{}}}"")
+                    text.contains("session.create") -> send(
+                        webSocket,
+                        "{\"jsonrpc\":\"2.0\",\"id\":$id,\"result\":{\"session_id\":\"sess42\",\"stored_session_id\":\"20261027_x\",\"info\":{}}}",
+                    )
                     text.contains("prompt.submit") -> {
-                        send(webSocket, """{"jsonrpc":"2.0","id":$id,"result":{"queued":true}}""")
+                        send(webSocket, "{\"jsonrpc\":\"2.0\",\"id\":$id,\"result\":{\"queued\":true}}")
                         if (streamAfterSubmit) {
-                            send(webSocket, """{"jsonrpc":"2.0","method":"event","params":{"type":"message.start","payload":{"text":"go"}}}""")
-                            send(webSocket, """{"jsonrpc":"2.0","method":"event","params":{"type":"message.delta","payload":{"text":"Hel"}}}""")
-                            send(webSocket, """{"jsonrpc":"2.0","method":"event","params":{"type":"message.delta","payload":{"text":"lo"}}}""")
-                            send(webSocket, """{"jsonrpc":"2.0","method":"event","params":{"type":"message.complete","payload":{"text":""}}}""")
-                            send(webSocket, """{"jsonrpc":"2.0","method":"event","params":{"type":"reasoning.delta","payload":{"text":"mulling"}}}""")
-                            send(webSocket, """{"jsonrpc":"2.0","method":"event","params":{"type":"tool.start","payload":{"toolId":"t1","name":"Read","argsText":"{}"}}}""")
-                            send(webSocket, """{"jsonrpc":"2.0","method":"event","params":{"type":"tool.complete","payload":{"toolId":"t1","resultText":"ok","durationS":0.4}}}""")
+                            send(webSocket, "{\"jsonrpc\":\"2.0\",\"method\":\"event\",\"params\":{\"type\":\"message.start\",\"payload\":{\"text\":\"go\"}}}")
+                            send(webSocket, "{\"jsonrpc\":\"2.0\",\"method\":\"event\",\"params\":{\"type\":\"message.delta\",\"payload\":{\"text\":\"Hel\"}}}")
+                            send(webSocket, "{\"jsonrpc\":\"2.0\",\"method\":\"event\",\"params\":{\"type\":\"message.delta\",\"payload\":{\"text\":\"lo\"}}}")
+                            send(webSocket, "{\"jsonrpc\":\"2.0\",\"method\":\"event\",\"params\":{\"type\":\"message.complete\",\"payload\":{\"text\":\"\"}}}")
+                            send(webSocket, "{\"jsonrpc\":\"2.0\",\"method\":\"event\",\"params\":{\"type\":\"reasoning.delta\",\"payload\":{\"text\":\"mulling\"}}}")
+                            send(webSocket, "{\"jsonrpc\":\"2.0\",\"method\":\"event\",\"params\":{\"type\":\"tool.start\",\"payload\":{\"toolId\":\"t1\",\"name\":\"Read\",\"argsText\":\"{}\"}}}")
+                            send(webSocket, "{\"jsonrpc\":\"2.0\",\"method\":\"event\",\"params\":{\"type\":\"tool.complete\",\"payload\":{\"toolId\":\"t1\",\"resultText\":\"ok\",\"durationS\":0.4}}}")
                         }
                     }
-                    else -> send(webSocket, """{"jsonrpc":"2.0","id":$id,"error":{"code":-32601,"message":"method not found: $text"}}")
+                    else -> send(
+                        webSocket,
+                        "{\"jsonrpc\":\"2.0\",\"id\":$id,\"error\":{\"code\":-32601,\"message\":\"method not found\"}}",
+                    )
                 }
             }
 
@@ -91,7 +95,7 @@ class HermesContractTest {
         return response
     }
 
-    private fun url() = server.url("/api/ws?token=abc").toString().replaceFirst("http", "ws")
+    private fun url(): String = server.url("/api/ws?token=abc").toString().replaceFirst("http", "ws")
 
     @Test
     fun `rpc correlation resolves result`() = runTest {
@@ -105,7 +109,7 @@ class HermesContractTest {
             withTimeout(5_000) { gateway.request("session.create", buildJsonObject { put("source", "chat") }) }
         } catch (_: TimeoutCancellationException) {
             throw AssertionError(
-                "request() stalled. fake received=${lastFake.received} fake sent=${lastFake.sent} clientState=${gateway.state.value}",
+                "request() stalled. fake received=$lastFake.received fake sent=$lastFake.sent clientState=${gateway.state.value}",
             )
         }
         assertEquals("sess42", (result["session_id"] as? kotlinx.serialization.json.JsonPrimitive)?.content)
@@ -131,7 +135,7 @@ class HermesContractTest {
             }
         } catch (_: TimeoutCancellationException) {
             throw AssertionError(
-                "prompt.submit stalled. fake received=${lastFake.received} fake sent=${lastFake.sent} clientState=${gateway.state.value}",
+                "prompt.submit stalled. fake received=$lastFake.received fake sent=$lastFake.sent clientState=${gateway.state.value}",
             )
         }
 
