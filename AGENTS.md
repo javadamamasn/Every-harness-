@@ -45,7 +45,10 @@ OpenCode, OpenClaw, Codex, Gemini CLI, generic ACP/OpenAI-compatible, PTY fallba
   Partials, honest: process stdout/stderr stream to ring buffer + subscribers is
   poll-based; PTY method refuses with NOT_ALLOWLISTED (needs the native-pty
   milestone); external-apps flag detection is manual until M3.
-- [ ] M3: discovery engine + Hub cards + manifest import.
+- [x] M3: discovery engine (transport + ranker wired over the local bridge;
+      Hub cards with status/location/confidence, bridge setup sheet, rescan) —
+      partials: manifest import and QR/manual add deferred to M8; the Hub
+      "start/stop/restart" actions wait for the foreground service (M6).
 - [ ] M4: Hermes adapter + full chat (JSON-RPC/WS, parity with Hermes Pocket).
 - [ ] M5: Claude Code adapter via bridge (stream-json, approvals, sessions).
 - [ ] M6: sessions list, projects, task desk, notifications, foreground service.

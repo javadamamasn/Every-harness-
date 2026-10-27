@@ -11,6 +11,15 @@
     <string name="nav_skills">مهارت‌ها</string>
     <string name="nav_models">مدل‌ها</string>
     <string name="nav_settings">تنظیمات</string>
+    <string name="hub_bridge_settings">پل…</string>
+    <string name="hub_scanning">در حال اسکن…</string>
+    <string name="hub_error_prefix">اسکن ناموفق: %1$s</string>
+    <string name="hub_bridge_setup">اتصال به پل ترموکس</string>
+    <string name="hub_save">ذخیره</string>
+    <string name="hub_cancel">لغو</string>
+    <string name="hub_port_label">پورت پل</string>
+    <string name="hub_token_label">توکن پل</string>
+    <string name="hub_bridge_hint">در ترموکس اجرا کنید: .harnesshub/bridge/bridge.js — پورت را با BRIDGE_PORT چاپ می‌کند و توکن در فایل .harnesshub/bridge-token است.</string>
     <string name="wizard_title">راه‌اندازی ترموکس</string>
     <string name="wizard_intro">هفت گام. هر گام نتیجه می‌دهد و راه‌حل نشان می‌دهد؛ آنچه اپ می‌تواند را اپ خودش انجام می‌دهد.</string>
     <string name="wizard_recheck">بررسی دوباره</string>
