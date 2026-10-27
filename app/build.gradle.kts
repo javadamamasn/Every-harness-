@@ -14,7 +14,10 @@ android {
         targetSdk = 35
         versionCode = 1
         versionName = "0.1.0"
-        resourceConfigurations += listOf("en", "fa")
+    }
+
+    androidResources {
+        localeFilters += listOf("en", "fa")
     }
 
     buildTypes {
@@ -27,10 +30,6 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
-    }
-
-    kotlinOptions {
-        jvmTarget = "17"
     }
 
     buildFeatures {
@@ -58,4 +57,10 @@ dependencies {
     implementation(libs.compose.material.icons)
     implementation(libs.androidx.navigation.compose)
     debugImplementation(libs.compose.ui.tooling)
+}
+
+kotlin {
+    compilerOptions {
+        jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17
+    }
 }
