@@ -69,7 +69,7 @@ object DiscoveryRanker {
                 merged.add(candidate)
             }
         }
-        return merged.sortedWith(compareByDescending<HarnessInstance> { it.confidence }.thenBy { it.displayName.value })
+        return merged.sortedWith(compareByDescending<HarnessInstance> { it.confidence }.thenBy { it.displayName })
     }
 
     /** Spec Appendix C: safe port fingerprint — no credentials, short routes. */
