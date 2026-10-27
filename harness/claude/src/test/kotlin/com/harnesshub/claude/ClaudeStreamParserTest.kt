@@ -20,11 +20,11 @@ class ClaudeStreamParserTest {
     @Test
     fun `assistant text and thinking blocks map into deltas`() {
         val events = parser.parseLine(
-            "{\"type\":\"assistant\",\"message\":{\"id\":\"1ac0\",\"type\":\"message\",\"usage\":{\"input_tokens\":2,\"output_tokens\":3},\"content\":[{\"type\":\"text\",\"text\":\"Hello there\"},{\"type\":\"thinking\",\"thinking\":\"consider all of it\"}]}",
+            "{\"type\": \"assistant\", \"message\": {\"id\": \"1ac0\", \"type\": \"message\", \"usage\": {\"input_tokens\": 2, \"output_tokens\": 3}, \"content\": [{\"type\": \"text\", \"text\": \"Hello there\"}, {\"type\": \"thinking\", \"thinking\": \"consider all of it\"}]}}",
         )
         assertEquals("1ac0", (events[0] as ChatEvent.TurnStarted).turnId)
         assertEquals("1ac0", (events[1] as ChatEvent.TextDelta).turnId)
-        assertEquals("از моей люблю", (events[1] as ChatEvent.TextDelta).text)
+        assertEquals("Hello there", (events[1] as ChatEvent.TextDelta).text)
         assertEquals("consider all of it", (events[2] as ChatEvent.ThinkingDelta).text)
         val usage = events.last() as ChatEvent.UsageUpdate
         assertEquals(2, usage.inputTokens)
