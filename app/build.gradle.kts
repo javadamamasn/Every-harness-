@@ -48,6 +48,7 @@ dependencies {
     implementation(project(":core:transport"))
     implementation(project(":core:discovery"))
     implementation(project(":harness:hermes"))
+    implementation(project(":harness:claude"))
     implementation(libs.okhttp)
 
     implementation(libs.androidx.core.ktx)

@@ -14,6 +14,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.Switch
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -25,6 +26,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.unit.sp
 import com.harnesshub.app.R
 import com.harnesshub.app.hub.HubViewModel
@@ -36,11 +38,12 @@ import com.harnesshub.model.HarnessInstance
  * bridge port + token exist in the settings store.
  */
 @Composable
-fun HubScreen() {
+fun HubScreen(onOpenHermes: () -> Unit = {}) {
     val context = LocalContext.current
     val viewModel = remember { HubViewModel(context.applicationContext as android.app.Application) }
     val state by viewModel.state.collectAsState()
     var showSetup by remember { mutableStateOf(false) }
+    var showExecConfirm by remember { mutableStateOf(false) }
 
     Column(
         modifier = Modifier
@@ -78,24 +81,48 @@ fun HubScreen() {
                 )
             }
             is HubViewModel.State.Ready -> {
-                if (s.instances.isEmpty()) {
-                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Text(stringResource(R.string.hub_empty_title), style = MaterialTheme.typography.titleMedium)
-                        Text(
-                            stringResource(R.string.hub_empty_message),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    s.hermes?.let { HermesCard(hermes = it, onOpen = onOpenHermes) }
+                    if (s.instances.isEmpty()) {
+                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Text(stringResource(R.string.hub_empty_title), style = MaterialTheme.typography.titleMedium)
+                            Text(
+                                stringResource(R.string.hub_empty_message),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                    } else {
+                        LazyColumn(
+                            verticalArrangement = Arrangement.spacedBy(8.dp),
+                            modifier = Modifier.weight(1f),
+                        ) {
+                            items(s.instances, key = { it.id.value }) { instance -> HubCard(instance) }
+                            item { ResourceRows(s, viewModel, { showExecConfirm = true }) }
+                        }
                     }
-                } else {
-                    LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        items(s.instances, key = { it.id.value }) { instance -> HubCard(instance) }
+                    if (s.instances.isEmpty() && s.hermes == null) {
+                        ResourceRows(s, viewModel, { showExecConfirm = true })
                     }
                 }
             }
         }
     }
 
+    if (showExecConfirm) {
+        AlertDialog(
+            onDismissRequest = { showExecConfirm = false },
+            title = { Text(stringResource(R.string.hub_exec_confirm_title)) },
+            text = { Text(stringResource(R.string.hub_exec_confirm_body)) },
+            confirmButton = {
+                TextButton(onClick = {
+                    showExecConfirm = false
+                    viewModel.setExecFlag(true)
+                }) { Text(stringResource(R.string.hub_save)) }
+            },
+            dismissButton = { TextButton(onClick = { showExecConfirm = false }) { Text(stringResource(R.string.hub_cancel)) } },
+        )
+    }
     if (showSetup) {
         BridgeSetupDialog(
             onDismiss = { showSetup = false },
@@ -169,4 +196,74 @@ private fun BridgeSetupDialog(
             }
         },
     )
+}
+
+@Composable
+private fun HermesCard(hermes: HubViewModel.HermesCard, onOpen: () -> Unit) {
+    Surface(
+        tonalElevation = 4.dp,
+        shape = MaterialTheme.shapes.medium,
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                Text("Hermes Agent", style = MaterialTheme.typography.titleMedium)
+                Text(
+                    stringResource(R.string.hub_tier1),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.primary,
+                )
+            }
+            Text(
+                stringResource(R.string.hub_hermes_status, hermes.port),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Button(onClick = onOpen) { Text(stringResource(R.string.hub_open_hermes)) }
+        }
+    }
+}
+
+@Composable
+private fun ResourceRows(s: HubViewModel.State.Ready, viewModel: HubViewModel, showExecConfirm: () -> Unit) {
+    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        s.resources?.let { res ->
+            val usedMiB = (res.memTotalKB - res.memAvailableKB) / 1024
+            val totalMiB = res.memTotalKB / 1024
+            Text(
+                stringResource(R.string.hub_mem_line, usedMiB.toLong(), totalMiB.toLong()),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            res.harnesses.forEach { h ->
+                Text(
+                    "• ${h.name}: ${(h.rssKB / 1024)} MiB · ${h.state}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        }
+        Text(stringResource(R.string.hub_mode_label), style = MaterialTheme.typography.labelLarge)
+        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            listOf("exclusive" to R.string.hub_mode_exclusive, "smart" to R.string.hub_mode_smart, "manual" to R.string.hub_mode_manual)
+                .forEach { (mode, label) ->
+                    val selected = s.resourceMode == mode
+                    TextButton(onClick = { viewModel.setResourceMode(mode) }) {
+                        Text(
+                            stringResource(label),
+                            color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                }
+        }
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text(stringResource(R.string.hub_exec_flag))
+            Switch(
+                checked = s.execFlag == true,
+                onCheckedChange = { on ->
+                    if (on) showExecConfirm() else viewModel.setExecFlag(false)
+                },
+            )
+        }
+    }
 }

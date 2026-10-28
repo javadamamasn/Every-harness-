@@ -22,6 +22,7 @@ object BridgeJson {
                 is Number -> JsonPrimitive(v)
                 is Boolean -> JsonPrimitive(v)
                 is String -> JsonPrimitive(v)
+                is JsonElement -> v
                 null -> JsonNull
                 else -> throw IllegalArgumentException("unsupported")
             }
@@ -39,6 +40,17 @@ object BridgeJson {
 
     fun array(element: JsonElement?, key: String): JsonArray? =
         (element as? JsonObject)?.get(key)?.let { it as? JsonArray }
+
+    fun bool(element: JsonElement?, key: String): Boolean? =
+        (element as? JsonObject)?.get(key)?.let { (it as? JsonPrimitive) }?.content?.let {
+            it.equals("true", true) || it == "1"
+        }
+
+    fun arrOfStrings(values: List<String>, key: String = "command"): JsonElement = kotlinx.serialization.json.buildJsonArray {
+        values.forEach {
+            add(kotlinx.serialization.json.JsonPrimitive(it))
+        }
+    }
 
     fun decodeResults(element: JsonElement?): List<DiscoveryResult> =
         (element as? JsonObject)?.get("results")?.let { raw ->

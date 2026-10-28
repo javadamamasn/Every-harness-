@@ -499,7 +499,7 @@ function methodHarnessListInternal() {
 }
 
 function methodHarnessList(cb) {
-  cb(null, { harnesses: methodHarnessListInternal(), mode: resourceMode() });
+  cb(null, { harnesses: methodHarnessListInternal(), mode: resourceMode(), execFlag: fs.existsSync(EXEC_FLAG) });
 }
 
 function methodHarnessRegister(params, cb) {

@@ -54,7 +54,7 @@ class ClaudeAdapter(
     data class ExecOutcome(val exitCode: Int, val stdout: String, val stderr: String)
 
     /** Builds the CLI argv for one turn (pure; unit-tested). */
-    internal fun command(prompt: String, resumeSessionId: String? = null): List<String> = buildList {
+    fun command(prompt: String, resumeSessionId: String? = null): List<String> = buildList {
         add(nodeBin)
         add(claudeCli)
         add("-p")

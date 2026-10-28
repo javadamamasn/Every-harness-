@@ -47,6 +47,7 @@ fun ChatScreen(onOpenSetup: () -> Unit = {}) {
     val context = LocalContext.current
     val viewModel = remember { ChatViewModel(context.applicationContext as android.app.Application) }
     val ui by viewModel.ui.collectAsState()
+    val engine by viewModel.engine.collectAsState()
     var draft by remember { mutableStateOf("") }
     val listState = rememberLazyListState()
 
@@ -61,6 +62,23 @@ fun ChatScreen(onOpenSetup: () -> Unit = {}) {
             .padding(12.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
+        // Engine picker (section 17: both Tier-1 harnesses open; no mode pick).
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+            TextButton(onClick = { viewModel.useEngine(ChatViewModel.Engine.HERMES) }) {
+                Text(
+                    stringResource(R.string.chat_engine_hermes),
+                    color = if (engine == ChatViewModel.Engine.HERMES) MaterialTheme.colorScheme.primary
+                    else MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            TextButton(onClick = { viewModel.useEngine(ChatViewModel.Engine.CLAUDE) }) {
+                Text(
+                    stringResource(R.string.chat_engine_claude),
+                    color = if (engine == ChatViewModel.Engine.CLAUDE) MaterialTheme.colorScheme.primary
+                    else MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        }
         when {
             ui.error == "hermes_not_configured" -> {
                 Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {

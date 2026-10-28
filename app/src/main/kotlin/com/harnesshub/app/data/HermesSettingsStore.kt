@@ -24,13 +24,15 @@ class HermesSettingsStore(private val context: Context) {
     private val tokenKey = stringPreferencesKey("hermes_token")
 
     fun settings(): Flow<HermesSettings> = context.hermesStore.data.map { prefs ->
-        HermesSettings(prefs[portKey] ?: 9119, prefs[tokenKey] ?: "")
+        val stored = prefs[tokenKey] ?: ""
+        HermesSettings(prefs[portKey] ?: 9119, stored.takeIf { it.isNotBlank() }?.let { Vault.decrypt(it) } ?: "")
     }
 
     suspend fun save(port: Int, token: String) {
+        val sealed = if (token.isBlank()) "" else Vault.encrypt(token.toCharArray())
         context.hermesStore.edit { prefs ->
             prefs[portKey] = port
-            prefs[tokenKey] = token
+            prefs[tokenKey] = sealed
         }
     }
 }

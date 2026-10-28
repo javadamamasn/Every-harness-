@@ -1,7 +1,9 @@
 package com.harnesshub.app.chat
 
 import android.app.Application
+import com.harnesshub.app.data.BridgeSettingsStore
 import com.harnesshub.app.data.HermesSettingsStore
+import com.harnesshub.claude.ClaudeAdapter
 import com.harnesshub.hermes.HermesAdapter
 import com.harnesshub.hermes.HermesConnection
 import com.harnesshub.model.InstanceId
@@ -9,6 +11,8 @@ import com.harnesshub.model.SessionId
 import com.harnesshub.spi.ChatEvent
 import com.harnesshub.spi.ChatReducer
 import com.harnesshub.spi.HarnessCredentials
+import com.harnesshub.transport.BridgeJson
+import com.harnesshub.transport.BridgeTransport
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -17,6 +21,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import okhttp3.OkHttpClient
+import okhttp3.Request
 
 /**
  * M4 chat engine: funnels one Hermes session's wire events through the shared
@@ -25,9 +31,15 @@ import kotlinx.coroutines.launch
  */
 class ChatViewModel(application: Application) {
 
+    enum class Engine { HERMES, CLAUDE }
+
     private val settings = HermesSettingsStore(application)
+    private val bridgeSettings = BridgeSettingsStore(application)
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val reducer = ChatReducer()
+
+    /** Termux constants: both CLIs live under the npm global prefix. */
+    private val claudeCli = "/data/data/com.termux/files/usr/lib/node_modules/@anthropic-ai/claude-code/cli.js"
 
     data class ChatUiState(
         val sessionId: String = "",
@@ -42,9 +54,15 @@ class ChatViewModel(application: Application) {
     private val _ui = MutableStateFlow(ChatUiState())
     val ui: StateFlow<ChatUiState> = _ui
 
+    private val _engine = MutableStateFlow(Engine.HERMES)
+    val engine: StateFlow<Engine> = _engine
+
     private var session: String? = null
     private var connection: HermesConnection? = null
+    private var claudeSession: String? = null
     private var state = ChatReducer.State()
+
+    fun useEngine(engine: Engine) { _engine.value = engine }
 
     fun start() {
         scope.launch {
@@ -93,16 +111,60 @@ class ChatViewModel(application: Application) {
     fun send(text: String) {
         if (text.isBlank()) return
         scope.launch {
-            val conn = connection ?: return@launch
             _ui.value = _ui.value.copy(busy = true)
             try {
-                val live = session ?: conn.createSession().also { session = it }
-                conn.send(SessionId(live), text)
+                when (_engine.value) {
+                    Engine.HERMES -> {
+                        val conn = connection ?: return@launch
+                        val live = session ?: conn.createSession().also { session = it }
+                        conn.send(SessionId(live), text)
+                    }
+                    Engine.CLAUDE -> claudeTurn(text)
+                }
             } catch (e: Exception) {
                 onEvent(ChatEvent.ErrorEvent("send", e.message ?: "send failed", retryable = true))
             } finally {
                 _ui.value = _ui.value.copy(busy = false)
             }
+        }
+    }
+
+    /** One-shot Claude Code turn over the bridge (exec.run; streaming at M7). */
+    private suspend fun claudeTurn(text: String) {
+        val prefs = bridgeSettings.settings().first()
+        if (!prefs.configured) {
+            onEvent(ChatEvent.ErrorEvent("exec", "bridge_not_configured", retryable = true))
+            return
+        }
+        val adapter = ClaudeAdapter(claudeCli)
+        val transport = BridgeTransport(clientFactory = { listener ->
+            OkHttpClient().newWebSocket(Request.Builder().url("ws://127.0.0.1:${prefs.port}").build(), listener)
+        })
+        try {
+            transport.connect(prefs.token)
+            if (transport.awaitReady(8_000) != BridgeTransport.State.Ready(1, null, null)) {
+                onEvent(ChatEvent.ErrorEvent("exec", "bridge not ready", retryable = true))
+                return
+            }
+            val executor = ClaudeAdapter.BridgeExecutor { command, timeoutMs ->
+                val result = transport.request(
+                    "exec.run",
+                    BridgeJson.obj(
+                        "command" to BridgeJson.arrOfStrings(command),
+                        "timeoutMs" to timeoutMs,
+                    ),
+                )
+                ClaudeAdapter.ExecOutcome(
+                    exitCode = BridgeJson.int(result, "exitCode") ?: 1,
+                    stdout = BridgeJson.string(result, "stdout") ?: "",
+                    stderr = BridgeJson.string(result, "stderr") ?: "",
+                )
+            }
+            val outcome = adapter.turn(executor, text, claudeSession, timeoutMs = 55_000)
+            claudeSession = outcome.sessionId ?: claudeSession
+            outcome.events.forEach { onEvent(it) }
+        } finally {
+            transport.close()
         }
     }
 
