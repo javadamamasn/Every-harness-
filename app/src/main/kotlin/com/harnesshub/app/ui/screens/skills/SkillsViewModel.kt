@@ -70,7 +70,7 @@ class SkillsViewModel(private val application: Application) {
         writeToBridgePath("$home/.claude/skills/$relative", content)
     }
 
-    suspend fun readContent(fullPath: String, onDone: (String) -> Unit) {
+    fun readContent(fullPath: String, onDone: (String) -> Unit) {
         scope.launch {
             runCatching { bridgeRequest("fs.read", BridgeJson.obj("path" to fullPath)) }
                 .onSuccess { onDone(BridgeJson.string(it, "content") ?: "") }
@@ -78,7 +78,7 @@ class SkillsViewModel(private val application: Application) {
         }
     }
 
-    suspend fun saveEdit(fullPath: String, content: String, onDone: (Boolean) -> Unit) {
+    fun saveEdit(fullPath: String, content: String, onDone: (Boolean) -> Unit) {
         scope.launch {
             val ok = runCatching {
                 writeToBridgePath(fullPath, content)
@@ -88,7 +88,7 @@ class SkillsViewModel(private val application: Application) {
         }
     }
 
-    suspend fun deleteSkill(dirPath: String, onDone: (Boolean) -> Unit) {
+    fun deleteSkill(dirPath: String, onDone: (Boolean) -> Unit) {
         scope.launch {
             val ok = runCatching {
                 bridgeRequest("fs.delete", BridgeJson.obj("path" to dirPath))
