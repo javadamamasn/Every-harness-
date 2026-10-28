@@ -46,6 +46,52 @@ class SkillsViewModel(private val application: Application) {
         refresh()
     }
 
+    /**
+     * Installs one skill via the bridge (`fs.write` creates parents atomically;
+     * roundtrip write→read→delete live-verified 2026-10-28).
+     */
+    fun install(name: String, description: String) {
+        scope.launch {
+            val safe = name.trim().replace(" ", "-")
+            if (safe.isBlank()) return@launch
+            val md = buildString {
+                append("---\n")
+                append("name: $safe\n")
+                append("description: ${description.trim()}\n")
+                append("---\n")
+            }
+            writeToBridge("$safe/SKILL.md", md)
+            refresh()
+        }
+    }
+
+    private suspend fun writeToBridge(relative: String, content: String) {
+        val prefs = settings.settings().first()
+        if (!prefs.configured) return
+        val transport = BridgeTransport(clientFactory = { listener ->
+            OkHttpClient().newWebSocket(
+                Request.Builder().url("ws://127.0.0.1:${prefs.port}").build(),
+                listener,
+            )
+        })
+        try {
+            transport.connect(prefs.token)
+            if (transport.awaitReady(8_000) !is BridgeTransport.State.Ready) return
+            val home = BridgeJson.string(transport.request("system.info"), "home")
+                ?: throw IllegalStateException("no bridge home")
+            val result = transport.request(
+                "fs.write",
+                BridgeJson.obj(
+                    "path" to "$home/.claude/skills/$relative",
+                    "content" to content,
+                ),
+            )
+            BridgeJson.string(result, "path") ?: throw IllegalStateException("fs.write failed")
+        } finally {
+            transport.close()
+        }
+    }
+
     fun refresh() {
         scope.launch {
             val prefs = settings.settings().first()

@@ -11,10 +11,14 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -34,6 +38,9 @@ fun SkillsScreen() {
         SkillsViewModel(context.applicationContext as android.app.Application)
     }
     val state by viewModel.state.collectAsState()
+    var showInstall by remember { mutableStateOf(false) }
+    var skillName by remember { mutableStateOf("") }
+    var skillDesc by remember { mutableStateOf("") }
 
     LazyColumn(
         modifier = Modifier.fillMaxSize().padding(16.dp),
@@ -46,10 +53,38 @@ fun SkillsScreen() {
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(stringResource(R.string.nav_skills), style = MaterialTheme.typography.headlineMedium)
+                TextButton(onClick = { showInstall = true }) {
+                    Text(stringResource(R.string.skills_install))
+                }
                 TextButton(onClick = { viewModel.refresh() }) {
                     Text(stringResource(R.string.tasks_refresh))
                 }
             }
+        }
+        if (showInstall) {
+            AlertDialog(
+                onDismissRequest = { showInstall = false },
+                title = { Text(stringResource(R.string.skills_install_title)) },
+                text = {
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        OutlinedTextField(value = skillName, onValueChange = { skillName = it },
+                            label = { Text(stringResource(R.string.skills_install_name)) })
+                        OutlinedTextField(value = skillDesc, onValueChange = { skillDesc = it },
+                            label = { Text(stringResource(R.string.skills_install_desc)) })
+                    }
+                },
+                confirmButton = {
+                    TextButton(onClick = {
+                        showInstall = false
+                        viewModel.install(skillName, skillDesc)
+                        skillName = ""
+                        skillDesc = ""
+                    }) { Text(stringResource(R.string.opencode_save)) }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showInstall = false }) { Text(stringResource(R.string.sessions_delete)) }
+                },
+            )
         }
         state.error?.let { error ->
             item {

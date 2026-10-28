@@ -55,6 +55,10 @@
     <string name="tasks_none_running">Nothing running</string>
     <string name="tasks_start">Start</string>
     <string name="tasks_stop">Stop</string>
+    <string name="skills_install">Install</string>
+    <string name="skills_install_title">Install skill</string>
+    <string name="skills_install_name">Skill name</string>
+    <string name="skills_install_desc">Description</string>
     <string name="skills_partial_note">Editing and installing skills arrive at M7b.</string>
     <string name="models_opencode_unconfigured">Configure the OpenCode server (chat → OpenCode tab) to list providers.</string>
     <string name="models_count">%1$d models</string>
