@@ -49,6 +49,7 @@ dependencies {
     implementation(project(":core:discovery"))
     implementation(project(":harness:hermes"))
     implementation(project(":harness:claude"))
+    implementation(project(":harness:opencode"))
     implementation(libs.okhttp)
 
     implementation(libs.androidx.core.ktx)

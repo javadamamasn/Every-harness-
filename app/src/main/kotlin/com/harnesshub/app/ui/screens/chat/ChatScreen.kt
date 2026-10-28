@@ -15,6 +15,7 @@ import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -49,6 +50,9 @@ fun ChatScreen(onOpenSetup: () -> Unit = {}) {
     val ui by viewModel.ui.collectAsState()
     val engine by viewModel.engine.collectAsState()
     var draft by remember { mutableStateOf("") }
+    var showOpenCodeSetup by remember { mutableStateOf(false) }
+    var opencodePort by remember { mutableStateOf("4096") }
+    var opencodePassword by remember { mutableStateOf("") }
     val listState = rememberLazyListState()
 
     LaunchedEffect(ui.messages.size) {
@@ -78,6 +82,41 @@ fun ChatScreen(onOpenSetup: () -> Unit = {}) {
                     else MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
+                TextButton(onClick = {
+                viewModel.opencodeConfigured { ok ->
+                    if (ok) viewModel.useEngine(ChatViewModel.Engine.OPENCODE) else showOpenCodeSetup = true
+                }
+            }) {
+                Text(
+                    stringResource(R.string.chat_engine_opencode),
+                    color = if (engine == ChatViewModel.Engine.OPENCODE) MaterialTheme.colorScheme.primary
+                    else MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        }
+        if (showOpenCodeSetup) {
+            AlertDialog(
+                onDismissRequest = { showOpenCodeSetup = false },
+                title = { Text(stringResource(R.string.opencode_dialog_title)) },
+                text = {
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        OutlinedTextField(value = opencodePort, onValueChange = { opencodePort = it },
+                            label = { Text(stringResource(R.string.opencode_port)) },
+                            keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
+                                keyboardType = androidx.compose.ui.text.input.KeyboardType.Number))
+                        OutlinedTextField(value = opencodePassword, onValueChange = { opencodePassword = it },
+                            label = { Text(stringResource(R.string.opencode_password)) },
+                            visualTransformation = androidx.compose.ui.text.input.PasswordVisualTransformation())
+                    }
+                },
+                confirmButton = {
+                    TextButton(onClick = {
+                        showOpenCodeSetup = false
+                        viewModel.saveOpenCode(opencodePort.toIntOrNull() ?: 4096, opencodePassword)
+                    }) { Text(stringResource(R.string.opencode_save)) }
+                },
+                dismissButton = { TextButton(onClick = { showOpenCodeSetup = false }) { Text(stringResource(R.string.hub_cancel)) } },
+            )
         }
         when {
             ui.error == "hermes_not_configured" -> {

@@ -3,6 +3,9 @@ package com.harnesshub.app.chat
 import android.app.Application
 import com.harnesshub.app.data.BridgeSettingsStore
 import com.harnesshub.app.data.HermesSettingsStore
+import com.harnesshub.app.data.OpenCodeSettingsStore
+import com.harnesshub.opencode.OpenCodeAdapter
+import com.harnesshub.opencode.OpenCodeClient
 import com.harnesshub.claude.ClaudeAdapter
 import com.harnesshub.hermes.HermesAdapter
 import com.harnesshub.hermes.HermesConnection
@@ -31,10 +34,11 @@ import okhttp3.Request
  */
 class ChatViewModel(application: Application) {
 
-    enum class Engine { HERMES, CLAUDE }
+    enum class Engine { HERMES, CLAUDE, OPENCODE }
 
     private val settings = HermesSettingsStore(application)
     private val bridgeSettings = BridgeSettingsStore(application)
+    private val opencodeSettings = OpenCodeSettingsStore(application)
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val reducer = ChatReducer()
 
@@ -60,6 +64,8 @@ class ChatViewModel(application: Application) {
     private var session: String? = null
     private var connection: HermesConnection? = null
     private var claudeSession: String? = null
+    private var opencodeSession: String? = null
+    private var opencodeAdapter: OpenCodeAdapter? = null
     private var state = ChatReducer.State()
 
     fun useEngine(engine: Engine) { _engine.value = engine }
@@ -120,6 +126,7 @@ class ChatViewModel(application: Application) {
                         conn.send(SessionId(live), text)
                     }
                     Engine.CLAUDE -> claudeTurn(text)
+                    Engine.OPENCODE -> opencodeTurn(text)
                 }
             } catch (e: Exception) {
                 onEvent(ChatEvent.ErrorEvent("send", e.message ?: "send failed", retryable = true))
@@ -173,6 +180,65 @@ class ChatViewModel(application: Application) {
             val live = session ?: return@launch
             connection?.cancel(SessionId(live))
         }
+    }
+
+    /** Direct Tier-1 connection to `opencode serve` (HTTP + SSE, no bridge). */
+    suspend fun connectOpenCode(): Boolean {
+        val prefs = opencodeSettings.settings().first()
+        if (!prefs.configured) return false
+        if (opencodeAdapter != null) return true
+        val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+        val client = OpenCodeClient(port = prefs.port, password = prefs.password.ifBlank { null })
+        val adapter = OpenCodeAdapter(client, scope)
+        val handle = adapter.connect(
+            com.harnesshub.model.InstanceId("opencode-direct"),
+            HarnessCredentials.BearerToken(prefs.password),
+        )
+        val conn = handle as? OpenCodeAdapter.OpenCodeConnectionHandle
+            ?: run { adapter.dispose(); return false }
+        opencodeAdapter = adapter
+        scope.launch {
+            conn.events.collect { event -> onEvent(event) }
+        }
+        _ui.value = _ui.value.copy(error = null)
+        return true
+    }
+
+    fun saveOpenCode(port: Int, password: String) {
+        scope.launch {
+            opencodeSettings.save(port, password)
+            opencodeAdapter?.dispose()
+            opencodeAdapter = null
+            opencodeSession = null
+            if (!connectOpenCode()) {
+                _ui.value = _ui.value.copy(error = "opencode_unreachable")
+            }
+        }
+    }
+
+    fun opencodeConfigured(onDone: (Boolean) -> Unit) {
+        scope.launch {
+            val ready = connectOpenCode()
+            if (!ready) opencodeSession = null
+            onDone(ready)
+        }
+    }
+
+    private suspend fun opencodeTurn(text: String) {
+        val prefs = opencodeSettings.settings().first()
+        if (!connectOpenCode()) {
+            _ui.value = _ui.value.copy(error = "opencode_not_configured")
+            return
+        }
+        val adapter = opencodeAdapter
+        if (adapter == null) {
+            _ui.value = _ui.value.copy(error = "opencode_not_connected")
+            return
+        }
+        if (opencodeSession == null) {
+            opencodeSession = adapter.createSession()
+        }
+        adapter.send(opencodeSession!!, text)
     }
 
     fun saveAndReconnect(port: Int, token: String) {

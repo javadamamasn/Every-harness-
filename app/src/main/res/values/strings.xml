@@ -30,6 +30,11 @@
     <string name="chat_retry">Retry</string>
     <string name="chat_engine_hermes">Hermes</string>
     <string name="chat_engine_claude">Claude Code</string>
+    <string name="chat_engine_opencode">OpenCode</string>
+    <string name="opencode_dialog_title">OpenCode server (direct)</string>
+    <string name="opencode_port">Port</string>
+    <string name="opencode_password">Password (optional)</string>
+    <string name="opencode_save">Save</string>
     <string name="hub_tier1">Tier 1</string>
     <string name="hub_hermes_status">Running on port %1$d — session token found automatically</string>
     <string name="hub_open_hermes">Open Hermes chat</string>

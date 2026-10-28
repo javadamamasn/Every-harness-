@@ -30,6 +30,11 @@
     <string name="chat_retry">تلاش دوباره</string>
     <string name="chat_engine_hermes">هرمز</string>
     <string name="chat_engine_claude">کلود کد</string>
+    <string name="chat_engine_opencode">OpenCode</string>
+    <string name="opencode_dialog_title">سرور OpenCode (مستقیم)</string>
+    <string name="opencode_port">پورت</string>
+    <string name="opencode_password">رمز (اختیاری)</string>
+    <string name="opencode_save">ذخیره</string>
     <string name="hub_tier1">Tier 1</string>
     <string name="hub_hermes_status">روی پورت %1$d در حال اجرا — توکن نشست خودکار پیدا شد</string>
     <string name="hub_open_hermes">باز کردن چت هرمز</string>
