@@ -83,15 +83,42 @@ class OpenCodeClient(
             }
         }
 
-    suspend fun createSession(title: String = "Harness Hub"): OcSession =
+    suspend fun createSession(
+        title: String = "Harness Hub",
+        model: Pair<String, String>? = null,
+    ): OcSession =
         call(
             authorized(Request.Builder())
                 .url("$base/session")
-                .post(jsonBody("""{"title":${quote(title)}}"""))
+                .post(
+                    jsonBody(
+                        if (model != null) {
+                            """{"title":${quote(title)},"model":{"providerID":${quote(model.first)},"id":${quote(model.second)}}}"""
+                        } else {
+                            """{"title":${quote(title)}}"""
+                        },
+                    ),
+                )
                 .build(),
         ).use { resp ->
             resp.useJson { parseSession(it) }
         }
+
+    /**
+     * POST /api/session/{id}/model with {model:{providerID,id}} — live-verified
+     * v1.19.3 (HTTP 204). `modelSetModel` wrapper key "model" required.
+     */
+    suspend fun setModel(sessionId: String, providerId: String, modelId: String): Boolean =
+        call(
+            authorized(Request.Builder())
+                .url("$base/api/session/$sessionId/model")
+                .post(
+                    jsonBody(
+                        """{"model":{"providerID":${quote(providerId)},"id":${quote(modelId)}}}""",
+                    ),
+                )
+                .build(),
+        ).use { it.isSuccessful }
 
     data class Provider(val id: String, val name: String, val models: List<String>)
 

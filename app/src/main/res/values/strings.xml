@@ -58,6 +58,7 @@
     <string name="skills_partial_note">Editing and installing skills arrive at M7b.</string>
     <string name="models_opencode_unconfigured">Configure the OpenCode server (chat → OpenCode tab) to list providers.</string>
     <string name="models_count">%1$d models</string>
+    <string name="models_more">%1$d more hidden</string>
     <string name="models_partial_note">Per-session model switching lands at M7b.</string>
     <string name="tasks_partial_note">Ring-buffer output streams arrive with the terminal milestone (M9).</string>
     <string name="hub_tier1">Tier 1</string>

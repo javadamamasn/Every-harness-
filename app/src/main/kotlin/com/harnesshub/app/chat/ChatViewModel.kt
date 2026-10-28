@@ -280,7 +280,9 @@ class ChatViewModel(application: Application) {
         opencodeSession = when {
             opencodeSession != null -> opencodeSession
             pending?.first == Engine.OPENCODE -> pending.second
-            else -> adapter.createSession()
+            else -> adapter.createSession(
+                model = prefs.preferredModel,
+            )
         }
         sessionStore.record(SessionStore.ENGINE_OPENCODE, opencodeSession!!, text.take(60))
         adapter.send(opencodeSession!!, text)

@@ -25,6 +25,7 @@ class ModelsViewModel(private val application: Application) {
         val providers: List<OpenCodeClient.Provider> = emptyList(),
         val error: String? = null,
         val loaded: Boolean = false,
+        val preferred: Pair<String, String>? = null,
     )
 
     private val _state = MutableStateFlow(UiState())
@@ -32,6 +33,14 @@ class ModelsViewModel(private val application: Application) {
 
     init {
         refresh()
+    }
+
+    /** Persist the preferred model (used by new OpenCode sessions). */
+    fun select(providerId: String, modelId: String) {
+        scope.launch {
+            opencodeSettings.savePreferredModel(providerId, modelId)
+            refresh()
+        }
     }
 
     fun refresh() {
@@ -44,7 +53,12 @@ class ModelsViewModel(private val application: Application) {
             try {
                 val client = OpenCodeClient(port = prefs.port, password = prefs.password.ifBlank { null })
                 val providers = client.listProviders()
-                _state.value = UiState(providers = providers, loaded = true, error = null)
+                _state.value = UiState(
+                    providers = providers,
+                    loaded = true,
+                    error = null,
+                    preferred = prefs.preferredModel,
+                )
             } catch (e: Exception) {
                 _state.value = UiState(loaded = true, error = e.message ?: "providers fetch failed")
             }

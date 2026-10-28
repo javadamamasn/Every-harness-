@@ -20,23 +20,40 @@ class OpenCodeSettingsStore(private val context: Context) {
     data class Settings(
         val port: Int = 4096,
         val password: String = "",
+        val modelProvider: String = "",
+        val modelId: String = "",
     ) {
         val configured: Boolean get() = port > 0 // password optional
+        val preferredModel: Pair<String, String>?
+            get() = modelProvider.takeIf { it.isNotBlank() && modelId.isNotBlank() }?.let { it to modelId }
     }
 
     private val portKey = intPreferencesKey("opencode_port")
     private val passwordKey = stringPreferencesKey("opencode_password")
+    private val modelProviderKey = stringPreferencesKey("opencode_model_provider")
+    private val modelIdKey = stringPreferencesKey("opencode_model_id")
 
     fun settings(): Flow<Settings> = context.opencodeStore.data.map { prefs ->
         val stored = prefs[passwordKey] ?: ""
-        Settings(prefs[portKey] ?: 4096, stored.ifBlank { "" })
+        Settings(prefs[portKey] ?: 4096,
+            password = stored.ifBlank { "" },
+            modelProvider = prefs[modelProviderKey] ?: "",
+            modelId = prefs[modelIdKey] ?: "",
+        )
     }
 
     suspend fun save(port: Int, password: String) {
-        val sealed = if (password.isBlank()) "" else Vault.encrypt(password.toCharArray())
         context.opencodeStore.edit { prefs ->
             prefs[portKey] = port
-            prefs[passwordKey] = sealed
+            prefs[passwordKey] = if (password.isBlank()) "" else Vault.encrypt(password.toCharArray())
+        }
+    }
+
+    /** Preferred model is a plain preference (provider-scoped id), not a secret. */
+    suspend fun savePreferredModel(providerId: String, modelId: String) {
+        context.opencodeStore.edit { prefs ->
+            prefs[modelProviderKey] = providerId
+            prefs[modelIdKey] = modelId
         }
     }
 }

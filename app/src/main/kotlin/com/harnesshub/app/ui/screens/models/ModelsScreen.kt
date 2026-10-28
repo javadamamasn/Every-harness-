@@ -74,15 +74,22 @@ fun ModelsScreen() {
             ) {
                 Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     Text("${provider.name} (${provider.id})", style = MaterialTheme.typography.titleSmall)
-                    Text(
-                        stringResource(R.string.models_count, provider.models.size),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                    Text(
-                        provider.models.take(6).joinToString(", "),
-                        style = MaterialTheme.typography.bodySmall,
-                    )
+                    provider.models.take(8).forEach { model ->
+                        val active = state.preferred == (provider.id to model)
+                        TextButton(onClick = { viewModel.select(provider.id, model) }) {
+                            Text(
+                                (if (active) "✓ " else "") + model,
+                                color = if (active) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
+                            )
+                        }
+                    }
+                    if (provider.models.size > 8) {
+                        Text(
+                            stringResource(R.string.models_more, provider.models.size - 8),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
                 }
             }
         }
