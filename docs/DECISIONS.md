@@ -82,3 +82,10 @@ Append-only log. Format: date — decision — alternatives — reason — verif
   The adapter runs CLI through the bridge's `exec.run` (verified denial:
   NOT_ALLOWLISTED until `~/.harnesshub/allow-exec` gate exists in Settings).
   Live token streaming arrives with the bridge process subscription (M6).
+
+## M6b (2026-10-28)
+- Vault = Android Keystore AES-GCM; DataStore holds `v1:<b64(iv|ct)>`; legacy plaintext read transparently then re-sealed. Verified at rest via migration path in unit review (CI 40630586382).
+- `hermes.setup` result shape verified live vs `hermes dashboard` pid (port 9119). Token never logged; settles in HermesSettingsStore via Vault.
+- resourceMode result nests `{mode:{...}}` in harness.list response — app parses both shapes (verified live with mode exclusive→switch→persist).
+- OpenCode `serve --port/--hostname` verified live on device v1.19.3: default port is 0 (dynamic), docs' 4096 claim corrected; /global/health healthy; /doc OpenAPI 3.1 snapshot committed under harness/opencode/fixtures/.
+- Claude in-app engine = one-shot exec.run turn (60s cap) — full streaming via process channel arrives at M7.
