@@ -8,6 +8,7 @@
     <string name="nav_hub">هاب</string>
     <string name="nav_chat">گفت‌وگو</string>
     <string name="nav_projects">پروژه‌ها</string>
+    <string name="nav_tasks">کارها</string>
     <string name="nav_sessions">نشست‌ها</string>
     <string name="nav_skills">مهارت‌ها</string>
     <string name="nav_models">مدل‌ها</string>
@@ -46,6 +47,14 @@
     <string name="projects_empty">پروژه‌ای نیست — یک پوشهٔ کاری اضافه کن</string>
     <string name="projects_active">فعال</string>
     <string name="projects_set_active">فعال کن</string>
+    <string name="tasks_refresh">به‌روزرسانی</string>
+    <string name="tasks_specs">فرمان‌های مجاز</string>
+    <string name="tasks_none_spec">فرمانی در لیست مجاز نیست</string>
+    <string name="tasks_running">در حال اجرا</string>
+    <string name="tasks_none_running">چیزی اجرا نمی‌شود</string>
+    <string name="tasks_start">اجرای</string>
+    <string name="tasks_stop">توقف</string>
+    <string name="tasks_partial_note">جریان خروجی پروسه‌ها در فاز ترمینال (M9) وصل می‌شود.</string>
     <string name="hub_tier1">Tier 1</string>
     <string name="hub_hermes_status">روی پورت %1$d در حال اجرا — توکن نشست خودکار پیدا شد</string>
     <string name="hub_open_hermes">باز کردن چت هرمز</string>

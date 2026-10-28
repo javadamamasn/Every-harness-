@@ -40,7 +40,7 @@ import com.harnesshub.model.HarnessInstance
  * bridge port + token exist in the settings store.
  */
 @Composable
-fun HubScreen(onOpenHermes: () -> Unit = {}) {
+fun HubScreen(onOpenHermes: () -> Unit = {}, onOpenTasks: () -> Unit = {}) {
     val context = LocalContext.current
     val viewModel = remember { HubViewModel(context.applicationContext as android.app.Application) }
     val state by viewModel.state.collectAsState()
@@ -77,6 +77,9 @@ fun HubScreen(onOpenHermes: () -> Unit = {}) {
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Button(onClick = { viewModel.rescan() }) {
                 Text(stringResource(R.string.hub_rescan))
+            }
+            TextButton(onClick = onOpenTasks) {
+                Text(stringResource(R.string.nav_tasks))
             }
             TextButton(onClick = { showSetup = true }) {
                 Text(stringResource(R.string.hub_bridge_settings))

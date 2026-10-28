@@ -805,7 +805,10 @@ function methodProcess(roots, allowlist, sub, params, cb) {
       return;
     }
     case "list": {
-      cb(null, { processes: [...processes.values()].map(processStatus) });
+      cb(null, {
+        processes: [...processes.values()].map(processStatus),
+        allowlist: allowlist.map((s) => ({ name: s.name, command: s.command, args: s.args || [] })),
+      });
       return;
     }
     case "stdin": {

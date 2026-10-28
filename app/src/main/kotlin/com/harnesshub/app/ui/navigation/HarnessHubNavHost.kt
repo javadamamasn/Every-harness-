@@ -32,6 +32,7 @@ import com.harnesshub.app.ui.screens.projects.ProjectsScreen
 import com.harnesshub.app.ui.screens.sessions.SessionsScreen
 import com.harnesshub.app.ui.screens.settings.SettingsScreen
 import com.harnesshub.app.ui.screens.skills.SkillsScreen
+import com.harnesshub.app.ui.screens.tasks.TasksScreen
 import com.harnesshub.app.ui.screens.wizard.WizardScreen
 
 private data class TopDestination(
@@ -82,9 +83,15 @@ fun HarnessHubNavHost() {
             startDestination = "hub",
             modifier = Modifier.padding(padding),
         ) {
-            composable("hub") { HubScreen(onOpenHermes = { navController.navigate("chat") }) }
+            composable("hub") {
+                HubScreen(
+                    onOpenHermes = { navController.navigate("chat") },
+                    onOpenTasks = { navController.navigate("tasks") },
+                )
+            }
             composable("chat") { ChatScreen(onOpenSetup = { navController.navigate("wizard") }) }
             composable("projects") { ProjectsScreen() }
+            composable("tasks") { TasksScreen() }
             composable("sessions") {
                 SessionsScreen(onOpenChat = { navController.navigate("chat") })
             }
