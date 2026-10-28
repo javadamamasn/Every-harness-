@@ -116,8 +116,15 @@ class HubViewModel(application: Application) {
                         harnesses = parseHarnesses(r),
                     )
                 }
-                val modeEnv = runCatching { transport.requestEnvelope("bridge.resourceMode").result }
-                val mode = modeEnv.getOrNull()?.let { BridgeJson.string(it, "mode") }
+                val modeRoot = runCatching { transport.requestEnvelope("bridge.resourceMode").result }.getOrNull()
+                    ?.let { it as? kotlinx.serialization.json.JsonObject }
+                val mode = modeRoot?.let { r ->
+                    when (val m = r["mode"]) {
+                        is kotlinx.serialization.json.JsonObject -> BridgeJson.string(m, "mode")
+                        is kotlinx.serialization.json.JsonPrimitive -> m.content
+                        else -> null
+                    }
+                }
                 val execFlag = runCatching { transport.requestEnvelope("harness.list").result }
                     .getOrNull()?.let { r -> BridgeJson.bool(r, "execFlag") }
                 _state.value = State.Ready(
