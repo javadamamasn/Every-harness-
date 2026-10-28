@@ -41,6 +41,9 @@ fun SkillsScreen() {
     var showInstall by remember { mutableStateOf(false) }
     var skillName by remember { mutableStateOf("") }
     var skillDesc by remember { mutableStateOf("") }
+    var editPath by remember { mutableStateOf<String?>(null) }
+    var editBody by remember { mutableStateOf("") }
+    var deleteConfirmPath by remember { mutableStateOf<String?>(null) }
 
 if (showInstall) {
         AlertDialog(
@@ -69,6 +72,42 @@ if (showInstall) {
     }
 
 
+    editPath?.let { path ->
+        AlertDialog(
+            onDismissRequest = { editPath = null },
+            title = { Text(stringResource(R.string.skills_edit_title)) },
+            text = {
+                OutlinedTextField(
+                    value = editBody,
+                    onValueChange = { editBody = it },
+                    minLines = 10,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    val target = path
+                    editPath = null
+                    viewModel.saveEdit(target, editBody) { }
+                }) { Text(stringResource(R.string.opencode_save)) }
+            },
+            dismissButton = { TextButton(onClick = { editPath = null }) { Text(stringResource(R.string.sessions_delete)) } },
+        )
+    }
+    deleteConfirmPath?.let { dirPath ->
+        AlertDialog(
+            onDismissRequest = { deleteConfirmPath = null },
+            title = { Text(stringResource(R.string.skills_delete_title)) },
+            text = { Text(stringResource(R.string.skills_delete_body)) },
+            confirmButton = {
+                TextButton(onClick = {
+                    deleteConfirmPath = null
+                    viewModel.deleteSkill(dirPath) { }
+                }) { Text(stringResource(R.string.sessions_delete)) }
+            },
+            dismissButton = { TextButton(onClick = { deleteConfirmPath = null }) { Text(stringResource(R.string.hub_cancel)) } },
+        )
+    }
     LazyColumn(
         modifier = Modifier.fillMaxSize().padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp),
@@ -113,6 +152,15 @@ if (showInstall) {
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        TextButton(onClick = {
+                            editPath = skill.path
+                            viewModel.readContent(skill.path) { editBody = it }
+                        }) { Text(stringResource(R.string.skills_edit)) }
+                        TextButton(onClick = { deleteConfirmPath = skill.path }) {
+                            Text(stringResource(R.string.sessions_delete))
+                        }
+                    }
                 }
             }
         }

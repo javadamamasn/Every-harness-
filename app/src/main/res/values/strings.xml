@@ -59,6 +59,10 @@
     <string name="skills_install_title">Install skill</string>
     <string name="skills_install_name">Skill name</string>
     <string name="skills_install_desc">Description</string>
+    <string name="skills_edit">Edit</string>
+    <string name="skills_edit_title">Edit SKILL.md</string>
+    <string name="skills_delete_title">Delete skill?</string>
+    <string name="skills_delete_body">Removes the whole skill folder from ~/.claude/skills.</string>
     <string name="skills_partial_note">Editing and installing skills arrive at M7b.</string>
     <string name="models_opencode_unconfigured">Configure the OpenCode server (chat → OpenCode tab) to list providers.</string>
     <string name="models_count">%1$d models</string>

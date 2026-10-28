@@ -66,8 +66,41 @@ class SkillsViewModel(private val application: Application) {
     }
 
     private suspend fun writeToBridge(relative: String, content: String) {
+        val home = homePath()
+        writeToBridgePath("$home/.claude/skills/$relative", content)
+    }
+
+    suspend fun readContent(fullPath: String, onDone: (String) -> Unit) {
+        scope.launch {
+            runCatching { bridgeRequest("fs.read", BridgeJson.obj("path" to fullPath)) }
+                .onSuccess { onDone(BridgeJson.string(it, "content") ?: "") }
+                .onFailure { _state.value = _state.value.copy(error = it.message) }
+        }
+    }
+
+    suspend fun saveEdit(fullPath: String, content: String, onDone: (Boolean) -> Unit) {
+        scope.launch {
+            val ok = runCatching {
+                writeToBridgePath(fullPath, content)
+                true
+            }.getOrDefault(false)
+            onDone(ok)
+        }
+    }
+
+    suspend fun deleteSkill(dirPath: String, onDone: (Boolean) -> Unit) {
+        scope.launch {
+            val ok = runCatching {
+                bridgeRequest("fs.delete", BridgeJson.obj("path" to dirPath))
+                true
+            }.getOrDefault(false)
+            onDone(ok)
+        }
+    }
+
+    private suspend fun bridgeRequest(method: String, params: kotlinx.serialization.json.JsonElement): kotlinx.serialization.json.JsonElement {
         val prefs = settings.settings().first()
-        if (!prefs.configured) return
+        if (!prefs.configured) throw IllegalStateException("bridge_not_configured")
         val transport = BridgeTransport(clientFactory = { listener ->
             OkHttpClient().newWebSocket(
                 Request.Builder().url("ws://127.0.0.1:${prefs.port}").build(),
@@ -76,20 +109,18 @@ class SkillsViewModel(private val application: Application) {
         })
         try {
             transport.connect(prefs.token)
-            if (transport.awaitReady(8_000) !is BridgeTransport.State.Ready) return
-            val home = BridgeJson.string(transport.request("system.info"), "home")
-                ?: throw IllegalStateException("no bridge home")
-            val result = transport.request(
-                "fs.write",
-                BridgeJson.obj(
-                    "path" to "$home/.claude/skills/$relative",
-                    "content" to content,
-                ),
-            )
-            BridgeJson.string(result, "path") ?: throw IllegalStateException("fs.write failed")
+            if (transport.awaitReady(8_000) !is BridgeTransport.State.Ready) throw IllegalStateException("bridge not ready")
+            return transport.request(method, params)
         } finally {
             transport.close()
         }
+    }
+
+    private suspend fun homePath(): String =
+        BridgeJson.string(bridgeRequest("system.info"), "home") ?: throw IllegalStateException("no bridge home")
+
+    private suspend fun writeToBridgePath(fullPath: String, content: String) {
+        bridgeRequest("fs.write", BridgeJson.obj("path" to fullPath, "content" to content))
     }
 
     fun refresh() {
