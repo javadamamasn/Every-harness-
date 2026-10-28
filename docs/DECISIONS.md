@@ -105,3 +105,9 @@ Append-only log. Format: date — decision — alternatives — reason — verif
 
 ## M6.6 tasks desk (2026-10-28)
 - process.list response extended with the allowlist ({name, command, args}) — verified live on the restarted bridge (demo-echo spec visible). TasksScreen: start/stop of allowlisted specs, live rows id/pid/exit, fa/en strings; ring-buffer output streaming deferred to M9 (honest note on screen). CI 40638011260 green.
+
+## M6.7 codex module + English-only app (2026-10-28)
+- harness/codex: CodexStreamParser + CodexAdapter over `codex exec --json` (<prompt> / `exec resume <id>` — resume argv ordering unverified). Event shapes snapshot-derived from the official openai/codex SDK sources fetched 2026-10-28 and committed under fixtures/ (CLI not installed on this device — turns error 'codex unavailable' honestly). 8 fixture tests.
+- App: engine picker now HERMES/CLAUDE/OPENCODE/CODEX (4 tabs); codex cwd = active project.
+- Language: per user directive the app is English-only — values-fa removed, androidResources.localeFilters=[en], supportsRtl=false. Chinese/Persian reply convention unchanged (chat only).
+- CI run 40641113530 green.
