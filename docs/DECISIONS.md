@@ -130,3 +130,8 @@ Append-only log. Format: date — decision — alternatives — reason — verif
 ## M7.3 skill install (2026-10-28)
 - Live roundtrip on-device via bridge: fs.write (atomic tmp+rename, parent auto-mkdir, backup on overwrite) → fs.read back → fs.delete of the probe dir (cleanup verified, no leftovers). Probe initially exposed a client-side wsSend masking bug only for frames >125 bytes (irrelevant in production APIs).
 - App: install dialog on the Skills screen writes ~/.claude/skills/<name>/SKILL.md via fs.write; home resolved dynamically from system.info. CI 40646538042 green.
+
+## M7.4 skill edit/delete (2026-10-28)
+- Skills screen rows gained Edit (fs.read → multiline SKILL.md editor → fs.write, bridge keeps timestamped backup) and Delete (confirm dialog → recursive fs.delete, verified recursive in bridge).
+- skills vm hooks are plain fun with internal scope.launch; bridgeRequest shared transport helper.
+- CI 40648742084 green.
