@@ -126,3 +126,7 @@ Append-only log. Format: date — decision — alternatives — reason — verif
 - OpenCode model primitives live-verified: POST /api/session/{id}/model body {model:{providerID,id}} → 204 (first attempt without the wrapper key rejected: Missing key model). POST /session with {model:{...}} echoes model on create.
 - App: preferred model stored in OpenCodeSettingsStore (plain prefs, not a secret); ModelsScreen tap-select with ✓ marker; new OpenCode sessions are created with the preferred model; existing sessions unchanged.
 - CI 40644977855 green.
+
+## M7.3 skill install (2026-10-28)
+- Live roundtrip on-device via bridge: fs.write (atomic tmp+rename, parent auto-mkdir, backup on overwrite) → fs.read back → fs.delete of the probe dir (cleanup verified, no leftovers). Probe initially exposed a client-side wsSend masking bug only for frames >125 bytes (irrelevant in production APIs).
+- App: install dialog on the Skills screen writes ~/.claude/skills/<name>/SKILL.md via fs.write; home resolved dynamically from system.info. CI 40646538042 green.

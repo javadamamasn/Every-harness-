@@ -93,9 +93,10 @@ OpenCode, OpenClaw, Codex, Gemini CLI, generic ACP/OpenAI-compatible, PTY fallba
       desk screen, Codex adapter (fixtures only — CLI not installed on device
       yet), then M7 (skills/models/plugins/cron/mem/env).
 
-      M7.1 done: Skills + Models screens live (skills via bridge skills.list,
-      models via OpenCode /config/providers; both verified). Next M7b: skill
-      install/edit, per-session model switching, plugins, cron, memory, env.
+      M7.1/M7.2/M7.3 done: Skills + Models screens live (skills.list +
+      /config/providers, verified); preferred-model switching with live-verified
+      model endpoints; skill INSTALL via bridge fs.write with live-verified
+      roundtrip. Remaining M7: skill edit/delete UI, plugins, cron, memory, env.
 
       OpenCode Tier-1 DIRECT adapter done (section 20): harness/opencode with
       OpenCodeClient (HTTP+SSE, OpenAPI-derived, no bridge in default path;
