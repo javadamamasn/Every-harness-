@@ -111,3 +111,8 @@ Append-only log. Format: date — decision — alternatives — reason — verif
 - App: engine picker now HERMES/CLAUDE/OPENCODE/CODEX (4 tabs); codex cwd = active project.
 - Language: per user directive the app is English-only — values-fa removed, androidResources.localeFilters=[en], supportsRtl=false. Chinese/Persian reply convention unchanged (chat only).
 - CI run 40641113530 green.
+
+## M7.1 skills + models (2026-10-28)
+- Bridge `skills.list`: scans ~/.claude/skills and ~/.opencode/skill SKILL.md frontmatter (name/description/path/source) — live-verified on-device with real claude skills dir (bridge restarted, then probed).
+- Models screen: OpenCode direct /config/providers (live-verified shape: providers + models map, masked keys); per-session switching at M7b.
+- CI 40643528308 green.
