@@ -89,3 +89,9 @@ Append-only log. Format: date — decision — alternatives — reason — verif
 - resourceMode result nests `{mode:{...}}` in harness.list response — app parses both shapes (verified live with mode exclusive→switch→persist).
 - OpenCode `serve --port/--hostname` verified live on device v1.19.3: default port is 0 (dynamic), docs' 4096 claim corrected; /global/health healthy; /doc OpenAPI 3.1 snapshot committed under harness/opencode/fixtures/.
 - Claude in-app engine = one-shot exec.run turn (60s cap) — full streaming via process channel arrives at M7.
+
+## M6.3 OpenCode Tier-1 direct (2026-10-28)
+- Direct default path = app -> opencode serve (HTTP+SSE), no bridge. Contract tests fake the server (MockWebServer); live basis = device probes (health/session/prompt/event verified).
+- Parts: full-value part updates diffed via partID bookkeeping (message.part.updated).
+- spi: ChatEvent.Other added (collapsible raw block rule, Appendix B); reducer ignores for now.
+- CI run 40634252679 green (app wiring + contract tests).

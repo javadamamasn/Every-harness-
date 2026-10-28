@@ -85,9 +85,19 @@ OpenCode, OpenClaw, Codex, Gemini CLI, generic ACP/OpenAI-compatible, PTY fallba
       exec.run gate with confirmation dialog, chat engine picker (Hermes /
       Claude one-shot turn over bridge exec.run, live probed), harness.list
       now carries mode + execFlag, conformance 33/33. Remaining M6/M7:
-      foreground service, sessions/project/task screens, OpenCode direct
-      adapter (spec snapshot saved), Codex adapter (fixtures only — CLI not
-      installed on device yet).
+      foreground service, sessions/project/task screens, Codex adapter
+      (fixtures only — CLI not installed on device yet).
+
+      OpenCode Tier-1 DIRECT adapter done (section 20): harness/opencode with
+      OpenCodeClient (HTTP+SSE, OpenAPI-derived, no bridge in default path;
+      Basic auth when OPENCODE_SERVER_PASSWORD set), OpenCodeEventMapper
+      (part-delta diffing, tool parts, step-finish usage/cost, failure errors),
+      OpenCodeAdapter implementing HarnessAdapter; 5 MockWebServer contract
+      tests green; wired into the chat engine picker (third tab +
+      port/password dialog; password sealed via Vault). Verification basis:
+      live probes of opencode serve v1.19.3 on-device + committed OpenAPI
+      snapshot; permission-reply endpoint remains snapshot-derived (Partial
+      until exercised live).
 - [ ] M7: skills, plugins, MCP, tools/permissions, providers/models, cron, memory, env.
 - [ ] M8: OpenClaw, Codex, Gemini CLI, OpenCode, generic OpenAI-compatible, ACP, PTY.
 - [ ] M9: files, terminal, logs/diagnostics, usage.
