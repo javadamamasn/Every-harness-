@@ -36,7 +36,7 @@ class HubViewModel(application: Application) {
     private val httpClient = OkHttpClient()
 
     data class HermesCard(val port: Int, val startedByBridge: Boolean, val pid: Int?)
-    data class HarnessProc(val name: String, val pid: Int, val alive: Boolean, val rssKB: Int)
+    data class HarnessProc(val name: String, val pid: Int, val alive: Boolean, val rssKB: Int, val state: String)
     data class Resources(val memTotalKB: Long, val memAvailableKB: Long, val harnesses: List<HarnessProc>)
 
     sealed interface State {
@@ -120,7 +120,7 @@ class HubViewModel(application: Application) {
                 val mode = modeEnv.getOrNull()?.let { BridgeJson.string(it, "mode") }
                 val execFlag = runCatching { transport.requestEnvelope("harness.list").result }
                     .getOrNull()?.let { r -> BridgeJson.bool(r, "execFlag") }
-                _state.value = Ready(
+                _state.value = State.Ready(
                     instances = instances,
                     hermes = hermesCard,
                     resources = resources,
@@ -193,6 +193,7 @@ class HubViewModel(application: Application) {
                 pid = BridgeJson.int(obj, "pid") ?: 0,
                 alive = BridgeJson.bool(obj, "alive") ?: false,
                 rssKB = BridgeJson.int(obj, "rssKB") ?: 0,
+                state = BridgeJson.string(obj, "state") ?: (if (BridgeJson.bool(obj, "alive") == true) "Running" else "Stopped"),
             )
         }
     }
