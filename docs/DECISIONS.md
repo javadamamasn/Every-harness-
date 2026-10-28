@@ -116,3 +116,8 @@ Append-only log. Format: date — decision — alternatives — reason — verif
 - Bridge `skills.list`: scans ~/.claude/skills and ~/.opencode/skill SKILL.md frontmatter (name/description/path/source) — live-verified on-device with real claude skills dir (bridge restarted, then probed).
 - Models screen: OpenCode direct /config/providers (live-verified shape: providers + models map, masked keys); per-session switching at M7b.
 - CI 40643528308 green.
+
+## M7.1 skills + models (2026-10-28)
+- Bridge `skills.list`: scans ~/.claude/skills and ~/.opencode/skill SKILL.md frontmatter (name/description/path/source) — live-verified on-device.
+- Models screen: OpenCode direct /config/providers (live-verified shape: providers + models map, masked keys); per-session switching at M7b.
+- CI 40643528308 green.
