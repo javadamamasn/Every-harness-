@@ -82,7 +82,14 @@ fun ChatScreen(onOpenSetup: () -> Unit = {}) {
                     else MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
-                TextButton(onClick = {
+                TextButton(onClick = { viewModel.useEngine(ChatViewModel.Engine.CODEX) }) {
+                Text(
+                    stringResource(R.string.chat_engine_codex),
+                    color = if (engine == ChatViewModel.Engine.CODEX) MaterialTheme.colorScheme.primary
+                    else MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            TextButton(onClick = {
                 viewModel.opencodeConfigured { ok ->
                     if (ok) viewModel.useEngine(ChatViewModel.Engine.OPENCODE) else showOpenCodeSetup = true
                 }

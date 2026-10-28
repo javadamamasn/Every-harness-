@@ -1,0 +1,10 @@
+{"type":"thread.started","thread_id":"th_fix_01"}
+{"type":"turn.started"}
+{"type":"item.started","item":{"id":"rs1","type":"reasoning","text":"Think"}}
+{"type":"item.updated","item":{"id":"rs1","type":"reasoning","text":"Thinking out loud"}}
+{"type":"item.started","item":{"id":"cm1","type":"command_execution","command":"ls -la","aggregated_output":"","status":"in_progress"}}
+{"type":"item.completed","item":{"id":"cm1","type":"command_execution","command":"ls -la","aggregated_output":"README.md","exit_code":0,"status":"completed"}}
+{"type":"item.started","item":{"id":"fc1","type":"file_change","changes":[{"path":"src/main.rs","kind":"update"}],"status":"completed"}}
+{"type":"item.completed","item":{"id":"am1","type":"agent_message","text":"Hello there"}}
+{"type":"item.completed","item":{"id":"mcp1","type":"mcp_tool_call","server":"fs","tool":"read","arguments":{"path":"x"},"status":"completed","result":{"structured_content":{"a":1}}}}
+{"type":"turn.completed","usage":{"input_tokens":100,"cached_input_tokens":10,"cache_write_input_tokens":0,"output_tokens":22,"reasoning_output_tokens":3}}

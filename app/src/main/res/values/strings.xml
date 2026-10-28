@@ -33,6 +33,7 @@
     <string name="chat_engine_hermes">Hermes</string>
     <string name="chat_engine_claude">Claude Code</string>
     <string name="chat_engine_opencode">OpenCode</string>
+    <string name="chat_engine_codex">Codex</string>
     <string name="opencode_dialog_title">OpenCode server (direct)</string>
     <string name="opencode_port">Port</string>
     <string name="opencode_password">Password (optional)</string>

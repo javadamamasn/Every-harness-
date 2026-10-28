@@ -8,6 +8,7 @@ import com.harnesshub.app.data.ProjectsStore
 import com.harnesshub.opencode.OpenCodeAdapter
 import com.harnesshub.opencode.OpenCodeClient
 import com.harnesshub.claude.ClaudeAdapter
+import com.harnesshub.codex.CodexAdapter
 import com.harnesshub.hermes.HermesAdapter
 import com.harnesshub.hermes.HermesConnection
 import com.harnesshub.model.InstanceId
@@ -50,7 +51,7 @@ object SessionOpen {
 
 class ChatViewModel(application: Application) {
 
-    enum class Engine { HERMES, CLAUDE, OPENCODE }
+    enum class Engine { HERMES, CLAUDE, OPENCODE, CODEX }
 
     private val settings = HermesSettingsStore(application)
     private val bridgeSettings = BridgeSettingsStore(application)
@@ -85,6 +86,7 @@ class ChatViewModel(application: Application) {
     private var claudeSession: String? = null
     private var opencodeSession: String? = null
     private var opencodeAdapter: OpenCodeAdapter? = null
+    private var codexThread: String? = null
     private var state = ChatReducer.State()
 
     fun useEngine(engine: Engine) { _engine.value = engine }
@@ -159,6 +161,7 @@ class ChatViewModel(application: Application) {
                     }
                     Engine.CLAUDE -> claudeTurn(text)
                     Engine.OPENCODE -> opencodeTurn(text)
+                    Engine.CODEX -> codexTurn(text)
                 }
             } catch (e: Exception) {
                 onEvent(ChatEvent.ErrorEvent("send", e.message ?: "send failed", retryable = true))
@@ -283,7 +286,49 @@ class ChatViewModel(application: Application) {
         adapter.send(opencodeSession!!, text)
     }
 
-    fun saveAndReconnect(port: Int, token: String) {
+    /** Codex CLI one-shot turn — argv documented, CLI not installed here yet. */
+    private suspend fun codexTurn(text: String) {
+        val prefs = bridgeSettings.settings().first()
+        if (!prefs.configured) {
+            onEvent(ChatEvent.ErrorEvent("exec", "bridge_not_configured", retryable = true))
+            return
+        }
+        val adapter = CodexAdapter(codexBin = "codex")
+        val transport = BridgeTransport(clientFactory = { listener ->
+            OkHttpClient().newWebSocket(Request.Builder().url("ws://127.0.0.1:${prefs.port}").build(), listener)
+        })
+        try {
+            transport.connect(prefs.token)
+            if (transport.awaitReady(8_000) != BridgeTransport.State.Ready(1, null, null)) {
+                onEvent(ChatEvent.ErrorEvent("exec", "bridge not ready", retryable = true))
+                return
+            }
+            val executor = CodexAdapter.BridgeExecutor { command, timeoutMs ->
+                val result = transport.request(
+                    "exec.run",
+                    BridgeJson.obj(
+                        "command" to BridgeJson.arrOfStrings(command),
+                        "timeoutMs" to timeoutMs,
+                        "cwd" to projectsStore.activePathData(),
+                    ),
+                )
+                val stderr = BridgeJson.string(result, "stderr") ?: ""
+                CodexAdapter.ExecOutcome(
+                    exitCode = BridgeJson.int(result, "exitCode") ?: 1,
+                    stdout = BridgeJson.string(result, "stdout") ?: "",
+                    stderr = stderr,
+                )
+            }
+            val outcome = adapter.turn(executor, text, codexThread, timeoutMs = 55_000)
+            if (outcome.events.isEmpty()) {
+                onEvent(ChatEvent.ErrorEvent("provider", "codex unavailable (CLI missing or failed to start)", retryable = false))
+                return
+            }
+            codexThread = outcome.threadId ?: codexThread
+            outcome.events.forEach { onEvent(it) }
+        } finally {
+            transport.close()
+        }
         scope.launch {
             settings.save(port, token)
             connection?.close()

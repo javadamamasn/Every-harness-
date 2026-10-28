@@ -50,6 +50,7 @@ dependencies {
     implementation(project(":harness:hermes"))
     implementation(project(":harness:claude"))
     implementation(project(":harness:opencode"))
+    implementation(project(":harness:codex"))
     implementation(libs.okhttp)
 
     implementation(libs.androidx.core.ktx)
