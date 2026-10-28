@@ -51,4 +51,7 @@ sealed interface ChatEvent {
     data class ErrorEvent(val kind: String, val message: String, val retryable: Boolean) : ChatEvent
     data object ConnectionLost : ChatEvent
     data object ConnectionResumed : ChatEvent
+
+    /** Unknown harness event preserved verbatim for the collapsible raw block (Appendix B). */
+    data class Other(val source: String, val payload: String) : ChatEvent
 }
