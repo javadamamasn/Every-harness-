@@ -94,6 +94,32 @@ class BridgeConnectionService : Service() {
         }
     }
 
+    private fun startForegroundInternal() {
+        val manager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            manager.createNotificationChannel(
+                NotificationChannel(CHANNEL_ID, "Harness tether", NotificationManager.IMPORTANCE_LOW),
+            )
+        }
+        val notification: Notification = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            Notification.Builder(this, CHANNEL_ID)
+                .setContentTitle(getString(com.harnesshub.app.R.string.service_tether_title))
+                .setContentText(getString(com.harnesshub.app.R.string.service_tether_body))
+                .setSmallIcon(android.R.drawable.stat_notify_sync)
+                .setOngoing(true)
+                .build()
+        } else {
+            @Suppress("DEPRECATION")
+            Notification.Builder(this)
+                .setContentTitle(getString(com.harnesshub.app.R.string.service_tether_title))
+                .setContentText(getString(com.harnesshub.app.R.string.service_tether_body))
+                .setSmallIcon(android.R.drawable.stat_notify_sync)
+                .setOngoing(true)
+                .build()
+        }
+        startForeground(NOTIFICATION_ID, notification)
+    }
+
     override fun onDestroy() {
         scope.cancel()
         runCatching { transport?.close() }
