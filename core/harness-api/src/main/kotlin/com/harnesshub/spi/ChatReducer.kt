@@ -52,6 +52,10 @@ class ChatReducer {
             if (current.sessionId != SessionId("")) current
             else current.copy(sessionId = SessionId(event.sessionId))
 
+        // Unknown/unmapped events stay untouched until the raw block lands;
+        // they never silently drop data from already-open turns.
+        is ChatEvent.Other -> current
+
         is ChatEvent.TurnStarted -> current
         // A completed turn ends streaming buffering; the next delta (a retry or
         // follow-up) opens a sibling message instead of appending to the old one.
