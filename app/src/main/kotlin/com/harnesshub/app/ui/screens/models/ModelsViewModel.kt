@@ -1,4 +1,4 @@
-package com.harnesshub.app.data
+package com.harnesshub.app.ui.screens.models
 
 import android.app.Application
 import com.harnesshub.opencode.OpenCodeClient
