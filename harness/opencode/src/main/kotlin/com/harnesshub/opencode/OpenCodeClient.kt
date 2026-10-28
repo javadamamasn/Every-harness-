@@ -93,6 +93,29 @@ class OpenCodeClient(
             resp.useJson { parseSession(it) }
         }
 
+    data class Provider(val id: String, val name: String, val models: List<String>)
+
+    /**
+     * GET /config/providers — verified live v1.19.3 (providers + models map).
+     * API keys come back masked by the server (e.g. sk-593...c564) and are never logged.
+     */
+    suspend fun listProviders(): List<Provider> =
+        call(authorized(Request.Builder()).url("$base/config/providers").get().build()).use { resp ->
+            resp.useJson { body ->
+                val root = json.parseToJsonElement(body) as? JsonObject ?: error("malformed providers body")
+                val providers = root["providers"] as? kotlinx.serialization.json.JsonArray ?: emptyJsonArray()
+                providers.mapNotNull { item ->
+                    val obj = item as? JsonObject ?: return@mapNotNull null
+                    val id = (obj["id"] as? JsonPrimitive)?.content ?: return@mapNotNull null
+                    Provider(
+                        id = id,
+                        name = (obj["name"] as? JsonPrimitive)?.content ?: id,
+                        models = (obj["models"] as? JsonObject)?.keys?.toList().orEmpty(),
+                    )
+                }
+            }
+        }
+
     suspend fun listSessions(): List<OcSession> =
         call(authorized(Request.Builder()).url("$base/session").get().build()).use { resp ->
             resp.useJson { body ->
@@ -180,6 +203,8 @@ class OpenCodeClient(
     }
 
     private fun jsonBody(payload: String): RequestBody = payload.toRequestBody("application/json".toMediaType())
+
+    private fun emptyJsonArray(): kotlinx.serialization.json.JsonArray = kotlinx.serialization.json.JsonArray(emptyList())
 
     private companion object {
         val json = Json {

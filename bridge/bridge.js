@@ -474,6 +474,35 @@ function methodResources(cb) {
 }
 
 /** List of harness processes this bridge knows about (per-name registry). */
+function methodSkills(cb) {
+  const dirs = [
+    path.join(os.homedir(), ".claude", "skills"),
+    path.join(os.homedir(), ".opencode", "skill"),
+  ];
+  const skills = [];
+  for (const dir of dirs) {
+    let entries = [];
+    try { entries = fs.readdirSync(dir, { withFileTypes: true }); } catch (_) { continue; }
+    for (const e of entries) {
+      if (!e.isDirectory()) continue;
+      const mdPath = path.join(dir, e.name, "SKILL.md");
+      let meta = { name: e.name, description: "" };
+      try {
+        const md = fs.readFileSync(mdPath, "utf8");
+        const fm = md.match(/---[\s\S]*?---/);
+        if (fm) {
+          const name = fm[0].match(/name:\s*([^\n]+)/);
+          const desc = fm[0].match(/description:\s*([^\n]+)/);
+          if (name) meta.name = name[1].trim();
+          if (desc) meta.description = desc[1].trim();
+        }
+      } catch (_) {}
+      skills.push({ ...meta, path: mdPath, source: path.basename(path.dirname(dir)) });
+    }
+  }
+  cb(null, { skills });
+}
+
 function methodHarnessListInternal() {
   const reg = loadJson(HARNESS_REGISTRY_FILE, {});
   const out = [];
@@ -1087,6 +1116,9 @@ function dispatch(session, env, roots, allowlist) {
       return;
     case "hermes.setup":
       methodHermesSetup(cb);
+      return;
+        case "skills.list":
+      methodSkills(cb);
       return;
     case "system.resources":
       methodResources(cb);
