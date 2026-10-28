@@ -9,6 +9,7 @@ android {
     compileSdk = 36 // androidx stack (core 1.18, nav 2.9.8) requires 36; targetSdk stays 35
 
     defaultConfig {
+        resourceConfigurations += listOf("en")
         applicationId = "com.harnesshub.app"
         minSdk = 29
         targetSdk = 35

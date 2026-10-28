@@ -87,7 +87,7 @@ class CodexStreamParser {
         if (value.length > previous) listOf(factory(id, value.substring(previous))) else emptyList()
     }
 
-    private fun <T> commandExecution(item: JsonObject, id: String, terminal: Boolean): List<ChatEvent> {
+    private fun commandExecution(item: JsonObject, id: String, terminal: Boolean): List<ChatEvent> {
         val events = mutableListOf<ChatEvent>()
         if (execStarted.add(id)) {
             events.add(ChatEvent.ToolCallStarted(id, string(item, "command") ?: "command_execution"))
