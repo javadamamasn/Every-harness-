@@ -31,6 +31,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.unit.sp
 import com.harnesshub.app.R
+import com.harnesshub.app.service.BridgeConnectionService
 import com.harnesshub.app.hub.HubViewModel
 import com.harnesshub.model.HarnessInstance
 
@@ -122,6 +123,17 @@ fun HubScreen(onOpenHermes: () -> Unit = {}, onOpenTasks: () -> Unit = {}) {
                             verticalArrangement = Arrangement.spacedBy(8.dp),
                             modifier = Modifier.weight(1f),
                         ) {
+        item {
+            val tether by BridgeConnectionService.bridgeState.collectAsState()
+            val label = when (tether) {
+                BridgeConnectionService.BridgeState.Ready -> stringResource(R.string.hub_tether_ready)
+                BridgeConnectionService.BridgeState.Connecting,
+                BridgeConnectionService.BridgeState.Reconnecting -> stringResource(R.string.hub_tether_connecting)
+                BridgeConnectionService.BridgeState.WaitingForSetup -> stringResource(R.string.hub_tether_setup)
+            }
+            Text(label, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+
                             items(s.instances, key = { it.id.value }) { instance -> HubCard(instance) }
                             item { ResourceRows(s, viewModel, { showExecConfirm = true }) }
                         }

@@ -69,6 +69,9 @@
     <string name="models_more">%1$d more hidden</string>
     <string name="models_partial_note">Per-session model switching lands at M7b.</string>
     <string name="tasks_partial_note">Ring-buffer output streams arrive with the terminal milestone (M9).</string>
+    <string name="hub_tether_ready">Tether: bridge pinned</string>
+    <string name="hub_tether_connecting">Tether: connecting…</string>
+    <string name="hub_tether_setup">Tether: bridge not configured</string>
     <string name="hub_tier1">Tier 1</string>
     <string name="hub_hermes_status">Running on port %1$d — session token found automatically</string>
     <string name="hub_open_hermes">Open Hermes chat</string>
