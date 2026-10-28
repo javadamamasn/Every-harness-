@@ -135,3 +135,8 @@ Append-only log. Format: date — decision — alternatives — reason — verif
 - Skills screen rows gained Edit (fs.read → multiline SKILL.md editor → fs.write, bridge keeps timestamped backup) and Delete (confirm dialog → recursive fs.delete, verified recursive in bridge).
 - skills vm hooks are plain fun with internal scope.launch; bridgeRequest shared transport helper.
 - CI 40648742084 green.
+
+## M7.5 tether service pinned (2026-10-28)
+- BridgeConnectionService now owns a PINNED bridge WebSocket: jittered-backoff reconnect loop (1s→30s), START_STICKY, foreground notification; companion bridgeState StateFlow (WaitingForSetup/Connecting/Ready/Reconnecting) surfaced as a tether chip on the Hub.
+- Per-connection Hermes gateway pinning (shared connection registry so chat screens reuse the service socket) NOT in this increment — chat still opens its own transports; honest partial.
+- CI 40651223313 green.
