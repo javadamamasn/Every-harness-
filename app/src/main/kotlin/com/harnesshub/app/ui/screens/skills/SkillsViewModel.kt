@@ -98,7 +98,7 @@ class SkillsViewModel(private val application: Application) {
         }
     }
 
-    private suspend fun bridgeRequest(method: String, params: kotlinx.serialization.json.JsonElement): kotlinx.serialization.json.JsonElement {
+    private suspend fun bridgeRequest(method: String, params: kotlinx.serialization.json.JsonElement? = null): kotlinx.serialization.json.JsonElement {
         val prefs = settings.settings().first()
         if (!prefs.configured) throw IllegalStateException("bridge_not_configured")
         val transport = BridgeTransport(clientFactory = { listener ->
