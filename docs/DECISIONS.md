@@ -121,3 +121,8 @@ Append-only log. Format: date — decision — alternatives — reason — verif
 - Bridge `skills.list`: scans ~/.claude/skills and ~/.opencode/skill SKILL.md frontmatter (name/description/path/source) — live-verified on-device.
 - Models screen: OpenCode direct /config/providers (live-verified shape: providers + models map, masked keys); per-session switching at M7b.
 - CI 40643528308 green.
+
+## M7.2 preferred model (2026-10-28)
+- OpenCode model primitives live-verified: POST /api/session/{id}/model body {model:{providerID,id}} → 204 (first attempt without the wrapper key rejected: Missing key model). POST /session with {model:{...}} echoes model on create.
+- App: preferred model stored in OpenCodeSettingsStore (plain prefs, not a secret); ModelsScreen tap-select with ✓ marker; new OpenCode sessions are created with the preferred model; existing sessions unchanged.
+- CI 40644977855 green.
