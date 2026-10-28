@@ -29,7 +29,7 @@ import com.harnesshub.app.chat.SessionStore
 fun SessionsScreen(onOpenChat: () -> Unit = {}) {
     val context = LocalContext.current
     val viewModel = remember { SessionsViewModel(context.applicationContext as android.app.Application) }
-    val records by viewModel.records.collectAsState()
+    val records by viewModel.records.collectAsState(initial = emptyList())
 
     LazyColumn(
         modifier = Modifier
