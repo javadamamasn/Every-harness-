@@ -1,6 +1,7 @@
 package com.harnesshub.app.ui.screens.tasks
 
 import android.app.Application
+import com.harnesshub.app.data.BridgeSettingsStore
 import com.harnesshub.transport.BridgeJson
 import com.harnesshub.transport.BridgeTransport
 import kotlinx.coroutines.CoroutineScope
