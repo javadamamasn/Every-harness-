@@ -12,8 +12,8 @@ java {
 dependencies {
     api(project(":core:model"))
     implementation(libs.kotlinx.coroutines.core)
-    implementation(libs.kotlinx.serialization.json)
-    implementation(libs.okhttp)
+    api(libs.kotlinx.serialization.json)
+    api(libs.okhttp)
     testImplementation(libs.junit5)
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.okhttp.mockwebserver)
