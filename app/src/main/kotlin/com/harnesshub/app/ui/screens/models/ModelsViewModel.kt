@@ -1,6 +1,7 @@
 package com.harnesshub.app.ui.screens.models
 
 import android.app.Application
+import com.harnesshub.app.data.OpenCodeSettingsStore
 import com.harnesshub.opencode.OpenCodeClient
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
