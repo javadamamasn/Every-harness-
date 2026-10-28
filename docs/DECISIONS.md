@@ -99,3 +99,6 @@ Append-only log. Format: date — decision — alternatives — reason — verif
 ## M6.4 tether + sessions (2026-10-28)
 - Foreground service `BridgeConnectionService` (dataSync, START_STICKY) started from Hub; notification channel + POST_NOTIFICATIONS runtime request. Honest partial: process-keepalive first, pinned bridge transport moves in at M7.
 - Session directory (SessionStore) records one row per engine/session; Sessions screen lists + opens (resume via SessionOpen handoff: Hermes reuses id, Claude/Opencode one-shot/turn-based resume works) + delete. CI run 40635833471 green.
+
+## M6.5 projects (2026-10-28)
+- Projects register (ProjectsStore, DataStore) + screen; active path applied as exec.run cwd for Claude turns (bridge breach-check verified: containedPath). Hermes/OpenCode workspace selection remains partial until their APIs expose it (opencode session create has no directory field in v1.19.3). CI run 40637030965 green.
