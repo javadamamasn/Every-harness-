@@ -55,8 +55,6 @@ class OpenCodeAdapter(
     private val mapper = OpenCodeEventMapper()
     private var sseJob: Job? = null
 
-    override fun probesFor(instance: com.harnesshub.model.InstanceId): List<DiscoveryProbe> =
-        probes
 
     /** Fan-out handle; mapper output lands here for the app-level reducer. */
     class OpenCodeConnectionHandle(
@@ -72,7 +70,7 @@ class OpenCodeAdapter(
         override suspend fun close() { /* owner cancels the SSE job via adapter.dispose() */ }
     }
 
-    override fun connect(
+    override suspend fun connect(
         instance: com.harnesshub.model.InstanceId,
         credentials: HarnessCredentials,
     ): ConnectionHandle {

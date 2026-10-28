@@ -4,6 +4,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
@@ -71,7 +72,7 @@ class OpenCodeClient(
     private inline fun <T> Response.useJson(block: (String) -> T): T =
         body?.let { resp -> block(resp.string()) } ?: error("empty body (HTTP $code)")
 
-    suspend fun health(): Health {
+    suspend fun health(): Health =
         call(authorized(Request.Builder()).url("$base/global/health").build()).use { resp ->
             resp.useJson { body ->
                 val obj = json.parseToJsonElement(body).let { it as? JsonObject } ?: error("malformed health body")
@@ -81,7 +82,6 @@ class OpenCodeClient(
                 )
             }
         }
-    }
 
     suspend fun createSession(title: String = "Harness Hub"): OcSession =
         call(
