@@ -81,7 +81,9 @@ fun HarnessHubNavHost() {
         ) {
             composable("hub") { HubScreen(onOpenHermes = { navController.navigate("chat") }) }
             composable("chat") { ChatScreen(onOpenSetup = { navController.navigate("wizard") }) }
-            composable("sessions") { SessionsScreen() }
+            composable("sessions") {
+                SessionsScreen(onOpenChat = { navController.navigate("chat") })
+            }
             composable("skills") { SkillsScreen() }
             composable("models") { ModelsScreen() }
             composable("settings") { SettingsScreen(onOpenWizard = { navController.navigate("wizard") }) }

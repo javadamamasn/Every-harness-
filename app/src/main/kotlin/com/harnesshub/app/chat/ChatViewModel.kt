@@ -32,6 +32,21 @@ import okhttp3.Request
  * [ChatReducer] and exposes send/stop. Hermes gateway is the local dashboard
  * (verified M4); credentials live in DataStore — never logged.
  */
+/** Cross-screen handoff for "open this session" taps. */
+object SessionOpen {
+    var engine: ChatViewModel.Engine? = null
+    var sessionId: String? = null
+
+    fun consume(): Pair<ChatViewModel.Engine, String>? {
+        val e = engine ?: return null
+        engine = null
+        return sessionId?.let { sid ->
+            sessionId = null
+            e to sid
+        }
+    }
+}
+
 class ChatViewModel(application: Application) {
 
     enum class Engine { HERMES, CLAUDE, OPENCODE }
@@ -39,6 +54,7 @@ class ChatViewModel(application: Application) {
     private val settings = HermesSettingsStore(application)
     private val bridgeSettings = BridgeSettingsStore(application)
     private val opencodeSettings = OpenCodeSettingsStore(application)
+    private val sessionStore = SessionStore(application)
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val reducer = ChatReducer()
 
@@ -62,6 +78,7 @@ class ChatViewModel(application: Application) {
     val engine: StateFlow<Engine> = _engine
 
     private var session: String? = null
+    private var lastTitle: String = ""
     private var connection: HermesConnection? = null
     private var claudeSession: String? = null
     private var opencodeSession: String? = null
@@ -69,6 +86,8 @@ class ChatViewModel(application: Application) {
     private var state = ChatReducer.State()
 
     fun useEngine(engine: Engine) { _engine.value = engine }
+
+
 
     fun start() {
         scope.launch {
@@ -90,7 +109,17 @@ class ChatViewModel(application: Application) {
                 scope.launch {
                     conn.events.collect { event -> onEvent(event) }
                 }
-                session = conn.createSession()
+                val pending = SessionOpen.consume()
+                if (pending?.first == Engine.HERMES) {
+                    session = pending.second
+                } else {
+                    session = conn.createSession()
+                    sessionStore.record(
+                        SessionStore.ENGINE_HERMES,
+                        session.orEmpty(),
+                        lastTitle.ifBlank { "Hermes chat" },
+                    )
+                }
                 _ui.value = _ui.value.copy(error = null)
             } catch (e: Exception) {
                 _ui.value = _ui.value.copy(error = e.message ?: "connect failed")
@@ -118,6 +147,7 @@ class ChatViewModel(application: Application) {
         if (text.isBlank()) return
         scope.launch {
             _ui.value = _ui.value.copy(busy = true)
+            lastTitle = text.take(60)
             try {
                 when (_engine.value) {
                     Engine.HERMES -> {
@@ -138,6 +168,10 @@ class ChatViewModel(application: Application) {
 
     /** One-shot Claude Code turn over the bridge (exec.run; streaming at M7). */
     private suspend fun claudeTurn(text: String) {
+        if (claudeSession == null) {
+            val pending = SessionOpen.consume()
+            if (pending?.first == Engine.CLAUDE) claudeSession = pending.second
+        }
         val prefs = bridgeSettings.settings().first()
         if (!prefs.configured) {
             onEvent(ChatEvent.ErrorEvent("exec", "bridge_not_configured", retryable = true))
@@ -169,6 +203,7 @@ class ChatViewModel(application: Application) {
             }
             val outcome = adapter.turn(executor, text, claudeSession, timeoutMs = 55_000)
             claudeSession = outcome.sessionId ?: claudeSession
+            claudeSession?.let { sessionStore.record(SessionStore.ENGINE_CLAUDE, it, lastTitle) }
             outcome.events.forEach { onEvent(it) }
         } finally {
             transport.close()
@@ -235,9 +270,13 @@ class ChatViewModel(application: Application) {
             _ui.value = _ui.value.copy(error = "opencode_not_connected")
             return
         }
-        if (opencodeSession == null) {
-            opencodeSession = adapter.createSession()
+        val pending = SessionOpen.consume()
+        opencodeSession = when {
+            opencodeSession != null -> opencodeSession
+            pending?.first == Engine.OPENCODE -> pending.second
+            else -> adapter.createSession()
         }
+        sessionStore.record(SessionStore.ENGINE_OPENCODE, opencodeSession!!, text.take(60))
         adapter.send(opencodeSession!!, text)
     }
 

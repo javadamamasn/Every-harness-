@@ -1,5 +1,6 @@
 package com.harnesshub.app.ui.screens.hub
 
+import android.os.Build
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -17,6 +18,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.Switch
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -44,6 +46,26 @@ fun HubScreen(onOpenHermes: () -> Unit = {}) {
     val state by viewModel.state.collectAsState()
     var showSetup by remember { mutableStateOf(false) }
     var showExecConfirm by remember { mutableStateOf(false) }
+
+    val notifyPermissionRequest = androidx.activity.compose.rememberLauncherForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.RequestPermission(),
+    ) { granted ->
+        if (granted) com.harnesshub.app.service.BridgeConnectionService.start(context)
+    }
+
+
+    LaunchedEffect(Unit) {
+        // Tether foreground service keeps the bridge alive on Android 12+ (honest partial: no pinned conn yet)
+        if (Build.VERSION.SDK_INT < 33 || androidx.core.content.ContextCompat.checkSelfPermission(
+                context,
+                android.Manifest.permission.POST_NOTIFICATIONS,
+            ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+        ) {
+            com.harnesshub.app.service.BridgeConnectionService.start(context)
+        } else {
+            notifyPermissionRequest.launch(android.Manifest.permission.POST_NOTIFICATIONS)
+        }
+    }
 
     Column(
         modifier = Modifier

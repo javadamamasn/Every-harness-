@@ -35,6 +35,11 @@
     <string name="opencode_port">Port</string>
     <string name="opencode_password">Password (optional)</string>
     <string name="opencode_save">Save</string>
+    <string name="service_tether_title">Harness tether</string>
+    <string name="service_tether_body">Bridge and connections stay alive</string>
+    <string name="sessions_empty">No sessions yet — send a message in chat</string>
+    <string name="sessions_open">Open</string>
+    <string name="sessions_delete">Delete</string>
     <string name="hub_tier1">Tier 1</string>
     <string name="hub_hermes_status">Running on port %1$d — session token found automatically</string>
     <string name="hub_open_hermes">Open Hermes chat</string>

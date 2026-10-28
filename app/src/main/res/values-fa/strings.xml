@@ -35,6 +35,11 @@
     <string name="opencode_port">پورت</string>
     <string name="opencode_password">رمز (اختیاری)</string>
     <string name="opencode_save">ذخیره</string>
+    <string name="service_tether_title">مهارگاه فعال</string>
+    <string name="service_tether_body">پل و اتصال‌ها زنده می‌مانند</string>
+    <string name="sessions_empty">هنوز نشستی نیست — در چت پیامی بفرست</string>
+    <string name="sessions_open">باز کردن</string>
+    <string name="sessions_delete">حذف</string>
     <string name="hub_tier1">Tier 1</string>
     <string name="hub_hermes_status">روی پورت %1$d در حال اجرا — توکن نشست خودکار پیدا شد</string>
     <string name="hub_open_hermes">باز کردن چت هرمز</string>
