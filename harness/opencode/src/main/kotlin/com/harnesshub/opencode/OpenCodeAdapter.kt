@@ -86,7 +86,10 @@ class OpenCodeAdapter(
 
     suspend fun health(): OpenCodeClient.Health = client.health()
 
-    suspend fun createSession(title: String = "Harness Hub"): String = client.createSession(title).id
+    suspend fun createSession(
+        title: String = "Harness Hub",
+        model: Pair<String, String>? = null,
+    ): String = client.createSession(title, model).id
 
     fun resumeSession(sessionId: String): String = sessionId
 
