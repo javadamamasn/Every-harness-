@@ -85,8 +85,11 @@ OpenCode, OpenClaw, Codex, Gemini CLI, generic ACP/OpenAI-compatible, PTY fallba
       exec.run gate with confirmation dialog, chat engine picker (Hermes /
       Claude one-shot turn over bridge exec.run, live probed), harness.list
       now carries mode + execFlag, conformance 33/33. Remaining M6/M7:
-      foreground service, sessions/project/task screens, Codex adapter
-      (fixtures only — CLI not installed on device yet).
+      Tether foreground service (BridgeConnectionService, dataSync +
+      POST_NOTIFICATIONS) started from Hub — keep-alive now, pinned bridge
+      transport lands at M7. Sessions screen done (SessionStore directory +
+      resume handoff + delete). Remaining: projects/tasks screens, Codex
+      adapter (fixtures only — CLI not installed on device yet).
 
       OpenCode Tier-1 DIRECT adapter done (section 20): harness/opencode with
       OpenCodeClient (HTTP+SSE, OpenAPI-derived, no bridge in default path;
