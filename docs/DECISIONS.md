@@ -102,3 +102,6 @@ Append-only log. Format: date — decision — alternatives — reason — verif
 
 ## M6.5 projects (2026-10-28)
 - Projects register (ProjectsStore, DataStore) + screen; active path applied as exec.run cwd for Claude turns (bridge breach-check verified: containedPath). Hermes/OpenCode workspace selection remains partial until their APIs expose it (opencode session create has no directory field in v1.19.3). CI run 40637030965 green.
+
+## M6.6 tasks desk (2026-10-28)
+- process.list response extended with the allowlist ({name, command, args}) — verified live on the restarted bridge (demo-echo spec visible). TasksScreen: start/stop of allowlisted specs, live rows id/pid/exit, fa/en strings; ring-buffer output streaming deferred to M9 (honest note on screen). CI 40638011260 green.
