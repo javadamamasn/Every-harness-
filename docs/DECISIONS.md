@@ -95,3 +95,7 @@ Append-only log. Format: date — decision — alternatives — reason — verif
 - Parts: full-value part updates diffed via partID bookkeeping (message.part.updated).
 - spi: ChatEvent.Other added (collapsible raw block rule, Appendix B); reducer ignores for now.
 - CI run 40634252679 green (app wiring + contract tests).
+
+## M6.4 tether + sessions (2026-10-28)
+- Foreground service `BridgeConnectionService` (dataSync, START_STICKY) started from Hub; notification channel + POST_NOTIFICATIONS runtime request. Honest partial: process-keepalive first, pinned bridge transport moves in at M7.
+- Session directory (SessionStore) records one row per engine/session; Sessions screen lists + opens (resume via SessionOpen handoff: Hermes reuses id, Claude/Opencode one-shot/turn-based resume works) + delete. CI run 40635833471 green.
