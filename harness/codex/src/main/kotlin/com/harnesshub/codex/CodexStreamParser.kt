@@ -25,6 +25,7 @@ class CodexStreamParser {
     private val json = Json { ignoreUnknownKeys = true; isLenient = true }
     private val seen = HashMap<String, Int>() // itemId → last length (text-like items)
     private val execStarted = HashSet<String>()
+    private val seenFiles = HashSet<String>()
 
     fun mapLine(line: String): List<ChatEvent> {
         val obj = json.parseToJsonElement(line) as? JsonObject
@@ -115,13 +116,16 @@ class CodexStreamParser {
     }
 
     private fun fileChange(item: JsonObject, id: String, terminal: Boolean): List<ChatEvent> {
-        val events = mutableListOf<ChatEvent>(
-            ChatEvent.DiffProposed(
-                turnId = id,
-                path = firstChangePath(item),
-                hunks = item["changes"]?.toString() ?: "[]",
-            ),
-        )
+        val events = mutableListOf<ChatEvent>()
+        if (seenFiles.add(id)) {
+            events.add(
+                ChatEvent.DiffProposed(
+                    turnId = id,
+                    path = firstChangePath(item),
+                    hunks = item["changes"]?.toString() ?: "[]",
+                ),
+            )
+        }
         if (terminal) {
             events.add(
                 ChatEvent.DiffResolved(

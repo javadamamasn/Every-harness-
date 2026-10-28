@@ -329,6 +329,9 @@ class ChatViewModel(application: Application) {
         } finally {
             transport.close()
         }
+    }
+
+    fun saveAndReconnect(port: Int, token: String) {
         scope.launch {
             settings.save(port, token)
             connection?.close()
