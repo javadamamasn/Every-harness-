@@ -4,6 +4,7 @@ import android.app.Application
 import com.harnesshub.app.data.BridgeSettingsStore
 import com.harnesshub.app.data.HermesSettingsStore
 import com.harnesshub.app.data.OpenCodeSettingsStore
+import com.harnesshub.app.data.ProjectsStore
 import com.harnesshub.opencode.OpenCodeAdapter
 import com.harnesshub.opencode.OpenCodeClient
 import com.harnesshub.claude.ClaudeAdapter
@@ -55,6 +56,7 @@ class ChatViewModel(application: Application) {
     private val bridgeSettings = BridgeSettingsStore(application)
     private val opencodeSettings = OpenCodeSettingsStore(application)
     private val sessionStore = SessionStore(application)
+    private val projectsStore = ProjectsStore(application)
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val reducer = ChatReducer()
 
@@ -193,6 +195,7 @@ class ChatViewModel(application: Application) {
                     BridgeJson.obj(
                         "command" to BridgeJson.arrOfStrings(command),
                         "timeoutMs" to timeoutMs,
+                        "cwd" to projectsStore.activePathData(),
                     ),
                 )
                 ClaudeAdapter.ExecOutcome(

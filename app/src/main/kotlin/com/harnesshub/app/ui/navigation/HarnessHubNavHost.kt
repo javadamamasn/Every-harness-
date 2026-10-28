@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Chat
 import androidx.compose.material.icons.filled.Extension
+import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.Memory
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.SpaceDashboard
@@ -27,6 +28,7 @@ import com.harnesshub.app.R
 import com.harnesshub.app.ui.screens.chat.ChatScreen
 import com.harnesshub.app.ui.screens.hub.HubScreen
 import com.harnesshub.app.ui.screens.models.ModelsScreen
+import com.harnesshub.app.ui.screens.projects.ProjectsScreen
 import com.harnesshub.app.ui.screens.sessions.SessionsScreen
 import com.harnesshub.app.ui.screens.settings.SettingsScreen
 import com.harnesshub.app.ui.screens.skills.SkillsScreen
@@ -42,6 +44,7 @@ private val topDestinations = listOf(
     TopDestination("hub", R.string.nav_hub, Icons.Filled.SpaceDashboard),
     TopDestination("chat", R.string.nav_chat, Icons.AutoMirrored.Filled.Chat),
     TopDestination("sessions", R.string.nav_sessions, Icons.Filled.Memory),
+    TopDestination("projects", R.string.nav_projects, Icons.Filled.Folder),
     TopDestination("skills", R.string.nav_skills, Icons.Filled.Extension),
     TopDestination("models", R.string.nav_models, Icons.Filled.Tune),
     TopDestination("settings", R.string.nav_settings, Icons.Filled.Settings),
@@ -81,6 +84,7 @@ fun HarnessHubNavHost() {
         ) {
             composable("hub") { HubScreen(onOpenHermes = { navController.navigate("chat") }) }
             composable("chat") { ChatScreen(onOpenSetup = { navController.navigate("wizard") }) }
+            composable("projects") { ProjectsScreen() }
             composable("sessions") {
                 SessionsScreen(onOpenChat = { navController.navigate("chat") })
             }

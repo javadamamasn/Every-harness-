@@ -7,6 +7,7 @@
     <string name="hub_rescan">اسکن دوباره</string>
     <string name="nav_hub">هاب</string>
     <string name="nav_chat">گفت‌وگو</string>
+    <string name="nav_projects">پروژه‌ها</string>
     <string name="nav_sessions">نشست‌ها</string>
     <string name="nav_skills">مهارت‌ها</string>
     <string name="nav_models">مدل‌ها</string>
@@ -40,6 +41,11 @@
     <string name="sessions_empty">هنوز نشستی نیست — در چت پیامی بفرست</string>
     <string name="sessions_open">باز کردن</string>
     <string name="sessions_delete">حذف</string>
+    <string name="projects_add">افزودن</string>
+    <string name="projects_add_hint">مسیر ترموکس، مثلاً /data/data/com.termux/files/home/project</string>
+    <string name="projects_empty">پروژه‌ای نیست — یک پوشهٔ کاری اضافه کن</string>
+    <string name="projects_active">فعال</string>
+    <string name="projects_set_active">فعال کن</string>
     <string name="hub_tier1">Tier 1</string>
     <string name="hub_hermes_status">روی پورت %1$d در حال اجرا — توکن نشست خودکار پیدا شد</string>
     <string name="hub_open_hermes">باز کردن چت هرمز</string>

@@ -7,6 +7,7 @@
     <string name="hub_rescan">Rescan</string>
     <string name="nav_hub">Hub</string>
     <string name="nav_chat">Chat</string>
+    <string name="nav_projects">Projects</string>
     <string name="nav_sessions">Sessions</string>
     <string name="nav_skills">Skills</string>
     <string name="nav_models">Models</string>
@@ -40,6 +41,11 @@
     <string name="sessions_empty">No sessions yet — send a message in chat</string>
     <string name="sessions_open">Open</string>
     <string name="sessions_delete">Delete</string>
+    <string name="projects_add">Add</string>
+    <string name="projects_add_hint">Termux path, e.g. /data/data/com.termux/files/home/project</string>
+    <string name="projects_empty">No projects — add a working directory</string>
+    <string name="projects_active">Active</string>
+    <string name="projects_set_active">Set active</string>
     <string name="hub_tier1">Tier 1</string>
     <string name="hub_hermes_status">Running on port %1$d — session token found automatically</string>
     <string name="hub_open_hermes">Open Hermes chat</string>
