@@ -1,0 +1,44 @@
+name: APK Install Test
+
+on:
+  push:
+    branches: [diag/apk-install]
+  workflow_dispatch:
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  install:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download the exact CI debug APK
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          # run 40846030188 = CI on main 535bf72, the artifact the phone has
+          gh run download 40846030188 --repo "$GITHUB_REPOSITORY" -n harness-hub-debug-apk -D apk
+          ls -l apk
+          sha256sum apk/*.apk
+
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Install APK on Android 14 emulator
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          target: google_apis
+          arch: x86_64
+          disable-animations: true
+          script: |
+            adb install -r apk/app-debug.apk
+            adb shell pm list packages | grep harness
