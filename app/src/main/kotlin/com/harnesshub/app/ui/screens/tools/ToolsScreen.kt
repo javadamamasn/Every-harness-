@@ -205,7 +205,7 @@ private fun ruleRow(rule: String, listLabel: String, labelColor: androidx.compos
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Column(horizontalArrangement = Arrangement.spacedBy(2.dp)) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(rule, style = MaterialTheme.typography.titleSmall)
                 Text(
                     listLabel,

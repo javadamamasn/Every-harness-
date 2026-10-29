@@ -84,6 +84,7 @@ class PluginsViewModel(private val application: Application) {
 
     private suspend fun homePath(): String =
         BridgeJson.string(bridgeRequest("system.info"), "home")
+            ?: throw IllegalStateException("no bridge home")
 
     fun refresh() {
         scope.launch {
