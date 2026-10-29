@@ -208,6 +208,51 @@ async function main() {
     stopBridge(bridgeC);
   }
 
+  { // M7 section-21 cron (durable schedules over allow-listed specs, no shell strings)
+    const bridgeD = await startBridge();
+    const c = await connect({ port: bridgeD.port });
+    const cToken = fs.readFileSync(path.join(bridgeD.home, ".harnesshub/bridge-token"), "utf8").trim();
+    await reqTimeout(c.hello(cToken), 3000);
+
+    const short = await reqTimeout(c.req("cron.create", { spec: "*/2 * * *", name: "demo-echo" }), 3000);
+    check("cron.create 4-field spec -> BAD_CRON_SPEC", short && short.error && short.error.code === "BAD_CRON_SPEC", short);
+
+    const range = await reqTimeout(c.req("cron.create", { spec: "61 * * * * *", name: "demo-echo" }), 3000);
+    check("cron.create out-of-range field -> BAD_CRON_SPEC", range && range.error && range.error.code === "BAD_CRON_SPEC", range);
+
+    const mayhem = await reqTimeout(c.req("cron.create", { spec: "};process.exit(1);*", name: "demo-echo" }), 3000);
+    check("cron.create injection text -> BAD_CRON_SPEC", mayhem && mayhem.error && mayhem.error.code === "BAD_CRON_SPEC", mayhem);
+
+    const deny = await reqTimeout(c.req("cron.create", { spec: "*/2 * * * *", name: "no-such-spec" }), 3000);
+    check("cron.create off allowlist -> NOT_ALLOWLISTED", deny && deny.error && deny.error.code === "NOT_ALLOWLISTED", deny);
+
+    const made = await reqTimeout(c.req("cron.create", { spec: "*/2 * * * *", name: "demo-echo" }), 3000);
+    check("cron.create", made && made.result && made.result.id && Array.isArray(made.result.runs), made);
+
+    const listing = await reqTimeout(c.req("cron.list", {}), 3000);
+    const row = listing.result && listing.result.jobs.find((j) => j.id === made.result.id);
+    check("cron.list exposes due queue", row && typeof row.nextRunAt === "string" && row.nextRunAt.length > 0, listing);
+
+    const nowRun = await reqTimeout(c.req("cron.run-now", { id: made.result.id }), 3000);
+    check("cron.run-now spawns allow-listed spec", nowRun && nowRun.result && nowRun.result.run && nowRun.result.run.status === "spawned", nowRun);
+
+    const history = await reqTimeout(c.req("cron.list", {}), 3000);
+    const hrow = history.result && history.result.jobs.find((j) => j.id === made.result.id);
+    check("cron.list lastRun recorded", hrow && hrow.runs && hrow.runs.length === 1 && hrow.runs[0].status === "spawned", history);
+
+    const missing = await reqTimeout(c.req("cron.run-now", { id: "cron_missing" }), 3000);
+    check("cron.run-now unknown -> NOT_FOUND", missing && missing.error && missing.error.code === "NOT_FOUND", missing);
+
+    const del = await reqTimeout(c.req("cron.delete", { id: made.result.id }), 3000);
+    check("cron.delete", del && del.result && del.result.deleted === true, del);
+
+    const after = await reqTimeout(c.req("cron.list", {}), 3000);
+    check("cron.list empty after delete", after && after.result && after.result.jobs.length === 0, after);
+
+    c.close();
+    stopBridge(bridgeD);
+  }
+
   console.log(`\n${passed} passed, ${failures} failed`);
   process.exitCode = failures ? 1 : 0;
 }

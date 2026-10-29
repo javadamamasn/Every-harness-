@@ -17,10 +17,12 @@
  * Methods: system.info, discovery.scan, proot.list, net.listeners,
  *          fs.list/stat/read/write/mkdir/move/delete/watch,
  *          process.start/stop/restart/status/list/stdin,
- *          logs.tail, exec.run, pty.open/write/resize/close
+ *          logs.tail, exec.run, pty.open/write/resize/close, cron.list/create/
+ *          delete/run-now, skills.list
  *
  * Error codes: AUTH_FAILED, FORBIDDEN_PATH, NOT_ALLOWLISTED, NOT_FOUND,
- *              ALREADY_RUNNING, TIMEOUT, PROTOCOL_MISMATCH, INTERNAL.
+ *              ALREADY_RUNNING, TIMEOUT, PROTOCOL_MISMATCH, INTERNAL,
+ *              BAD_CRON_SPEC.
  * Errors never leak stack traces or tokens.
  */
 "use strict";
@@ -473,7 +475,254 @@ function methodResources(cb) {
   cb(null, { memTotalKB: memTotal, memAvailableKB: memAvailable, harnesses });
 }
 
-/** List of harness processes this bridge knows about (per-name registry). */
+// ── cron (section 21): durable schedules under HUB_DIR/cron.json ────────────
+// A job references an allow-listed launch spec by name plus an optional
+// argument array — never a shell string (build-spec Appendix F: no shell
+// string concatenation, argument arrays only). The bridge fires matching jobs
+// on every minute tick while it is alive; run-now fires immediately.
+const CRON_FILE = path.join(HUB_DIR, "cron.json");
+const CRON_RUN_HISTORY = 20; // newest-first per job
+const CRON_RANGES = [ // minute, hour, dom, month, dow
+  [0, 59], [0, 23], [1, 31], [1, 12], [0, 7],
+];
+const CRON_DOW_ALIASES = { sun: 0, mon: 1, tue: 2, wed: 3, thu: 4, fri: 5, sat: 6 };
+
+function cronLoad() {
+  try {
+    const list = JSON.parse(fs.readFileSync(CRON_FILE, "utf8"));
+    return Array.isArray(list) ? list : [];
+  } catch (_) {
+    return [];
+  }
+}
+
+function cronSave(jobs) {
+  ensureHubDir();
+  const tmp = `${CRON_FILE}.tmp-${Date.now()}`;
+  fs.writeFileSync(tmp, JSON.stringify(jobs, null, 2), { mode: 0o600 });
+  fs.renameSync(tmp, CRON_FILE);
+}
+
+function cronNumToken(token) {
+  if (/^\d+$/.test(token)) return Number(token);
+  const alias = CRON_DOW_ALIASES[String(token).toLowerCase()];
+  if (alias !== undefined) return alias;
+  throw new Error(`bad number ${JSON.stringify(token)}`);
+}
+
+/** Parses one cron field into a Set of matching integers, or throws. */
+function cronParseField(raw, idx) {
+  const [min, max] = CRON_RANGES[idx];
+  const isDow = idx === 4;
+  const values = new Set();
+  for (const part of String(raw).split(",")) {
+    const chunk = part.trim();
+    if (!chunk) throw new Error("empty field");
+    let token = chunk;
+    let step = 1;
+    const slash = token.indexOf("/");
+    if (slash >= 0) {
+      const stepTok = token.slice(slash + 1);
+      if (!/^\d+$/.test(stepTok) || Number(stepTok) <= 0) throw new Error(`bad step ${JSON.stringify(stepTok)}`);
+      step = Number(stepTok);
+      token = token.slice(0, slash);
+    }
+    let lo;
+    let hi;
+    if (token === "*" || token === "") {
+      lo = min;
+      hi = max;
+    } else if (token.includes("-")) {
+      const bits = token.split("-");
+      if (bits.length !== 2) throw new Error(`bad range ${JSON.stringify(token)}`);
+      lo = cronNumToken(bits[0]);
+      hi = cronNumToken(bits[1]);
+    } else {
+      lo = cronNumToken(token);
+      hi = step > 1 ? max : lo;
+    }
+    if (lo < min || hi > max) throw new Error(`out of range ${JSON.stringify(token)}`);
+    if (isDow) {
+      lo %= 7;
+      hi %= 7;
+    }
+    if (lo > hi) {
+      if (!isDow) throw new Error(`bad range ${JSON.stringify(token)}`);
+      hi += 7; // wrapped day range, e.g. mon-sun as 1-0
+    }
+    for (let v = lo; v <= hi; v += step) values.add(isDow ? v % 7 : v);
+  }
+  if (!values.size) throw new Error("empty field");
+  return { values, wildcard: String(raw).trim() === "*" };
+}
+
+function cronParseSpec(spec) {
+  const fields = String(spec).trim().split(/\s+/);
+  if (fields.length !== 5) throw new Error("spec must have 5 fields (m h dom mon dow)");
+  return {
+    parsed: fields.map(cronParseField),
+    domRestricted: fields[2].trim() !== "*",
+    dowRestricted: fields[4].trim() !== "*",
+  };
+}
+
+/** Classic cron dom/dow OR rule when both day fields are restricted. */
+function cronMatches(parsedSpec, ms) {
+  const d = new Date(ms);
+  if (!parsedSpec.parsed[0].values.has(d.getMinutes())) return false;
+  if (!parsedSpec.parsed[1].values.has(d.getHours())) return false;
+  if (!parsedSpec.parsed[3].values.has(d.getMonth() + 1)) return false;
+  const domOk = parsedSpec.parsed[2].values.has(d.getDate());
+  const dowOk = parsedSpec.parsed[4].values.has(d.getDay());
+  if (parsedSpec.domRestricted && parsedSpec.dowRestricted) return domOk || dowOk;
+  if (parsedSpec.domRestricted) return domOk;
+  if (parsedSpec.dowRestricted) return dowOk;
+  return true;
+}
+
+/** Next minute this spec fires, ISO string — or null when nothing matches within a year. */
+function cronNextRun(spec, fromMs) {
+  let parsed;
+  try {
+    parsed = cronParseSpec(spec);
+  } catch (_) {
+    return null; // invalid spec — reported honestly as "never parses"
+  }
+  const start = Math.floor(fromMs / 60000) * 60000 + 60000; // first whole minute ahead
+  for (let i = 0; i < 366 * 24 * 60; i++) {
+    const t = start + i * 60000;
+    if (cronMatches(parsed, t)) return new Date(t).toISOString();
+  }
+  return null;
+}
+
+function methodCronList(cb) {
+  const now = Date.now();
+  const jobs = cronLoad().map((j) => ({ ...j, nextRunAt: cronNextRun(j.spec, now) }));
+  cb(null, { jobs });
+}
+
+function cronRecordRun(jobId, run) {
+  try {
+    const jobs = cronLoad();
+    const job = jobs.find((j) => j.id === jobId);
+    if (!job) return;
+    job.runs = Array.isArray(job.runs) ? job.runs : [];
+    job.runs.unshift(run);
+    if (job.runs.length > CRON_RUN_HISTORY) job.runs.length = CRON_RUN_HISTORY;
+    job.lastRun = { at: run.at, status: run.status };
+    cronSave(jobs);
+  } catch (_) { /* disk full / no home — the tick keeps going */ }
+}
+
+/** Fires one job: resolves its allow-list entry and spawns the arg array. */
+function cronFire(job, trigger) {
+  const entry = loadAllowlist().find((s) => s.name === job.name);
+  const run = { at: new Date().toISOString(), trigger };
+  if (!entry) {
+    run.status = "not_allowlisted";
+    cronRecordRun(job.id, run);
+    audit("cron.fire.denied", { id: job.id, name: job.name });
+    return run;
+  }
+  try {
+    const args = Array.isArray(job.args) && job.args.length ? job.args.map(String) : entry.args || [];
+    const rec = spawnAllowlisted({ ...entry, args });
+    run.status = "spawned";
+    run.recId = rec.id;
+    rec.child.once("exit", (code, signal) => {
+      try {
+        const jobs = cronLoad();
+        const stored = jobs.find((j) => j.id === job.id);
+        const hit = stored && Array.isArray(stored.runs) && stored.runs.find((r) => r.recId === rec.id);
+        if (hit) {
+          hit.exit = { code: code === null ? null : code, signal: signal || null, at: new Date().toISOString() };
+          cronSave(jobs);
+        }
+      } catch (_) { /* ignore */ }
+    });
+    audit("cron.fire", { id: job.id, name: job.name });
+  } catch (e) {
+    run.status = "spawn_failed";
+    run.error = String(e && e.message ? e.message : e);
+    audit("cron.fire.error", { id: job.id, error: run.error });
+  }
+  cronRecordRun(job.id, run);
+  return run;
+}
+
+let lastCronMinute = "";
+function cronTick() {
+  const d = new Date();
+  const minuteKey = `${d.getFullYear()} ${d.getMonth()} ${d.getDate()} ${d.getHours()} ${d.getMinutes()}`;
+  if (minuteKey === lastCronMinute) return;
+  lastCronMinute = minuteKey;
+  for (const job of cronLoad()) {
+    try {
+      if (!cronMatches(cronParseSpec(job.spec), d.getTime())) continue;
+    } catch (_) {
+      continue; // stored spec no longer parses — stays listed, never fires
+    }
+    cronFire(job, "schedule");
+  }
+}
+
+function methodCronCreate(params, cb) {
+  const spec = params && (params.spec || params.cron);
+  const name = params && params.name;
+  if (typeof spec !== "string") return cb({ code: "BAD_CRON_SPEC", message: "spec required" });
+  try {
+    cronParseSpec(spec);
+  } catch (e) {
+    return cb({ code: "BAD_CRON_SPEC", message: String(e.message || e) });
+  }
+  if (typeof name !== "string" || !name.trim()) {
+    return cb({ code: "BAD_CRON_SPEC", message: "name required (allow-listed launch spec)" });
+  }
+  const entry = loadAllowlist().find((s) => s.name === name);
+  if (!entry) {
+    audit("cron.create.denied", { name });
+    return cb({ code: "NOT_ALLOWLISTED", message: "Launch spec name is not on the allow-list" });
+  }
+  let args;
+  if (params.args !== undefined) {
+    if (!Array.isArray(params.args) || params.args.some((a) => typeof a !== "string")) {
+      return cb({ code: "BAD_CRON_SPEC", message: "args must be an array of strings" });
+    }
+    args = params.args;
+  }
+  const jobs = cronLoad();
+  const id = `cron_${Date.now().toString(36)}_${crypto.randomBytes(4).toString("hex")}`;
+  const job = { id, spec: String(spec).trim(), name, args, createdAt: new Date().toISOString(), runs: [] };
+  jobs.push(job);
+  cronSave(jobs);
+  audit("cron.create", { id, spec: job.spec, name });
+  cb(null, job);
+}
+
+function methodCronDelete(params, cb) {
+  const id = params && params.id;
+  const jobs = cronLoad();
+  const next = jobs.filter((j) => j.id !== id);
+  if (next.length === jobs.length) return cb({ code: "NOT_FOUND", message: `no cron job ${id}` });
+  cronSave(next);
+  audit("cron.delete", { id });
+  cb(null, { id, deleted: true });
+}
+
+function methodCronRunNow(params, cb) {
+  const id = params && params.id;
+  const job = cronLoad().find((j) => j.id === id);
+  if (!job) return cb({ code: "NOT_FOUND", message: `no cron job ${id}` });
+  cb(null, { id, run: cronFire(job, "run-now") });
+}
+
+function startCronScheduler() {
+  lastCronMinute = "";
+  cronTick();
+  setInterval(cronTick, 20000);
+}
+
 function methodSkills(cb) {
   const dirs = [
     path.join(os.homedir(), ".claude", "skills"),
@@ -1120,6 +1369,18 @@ function dispatch(session, env, roots, allowlist) {
         case "skills.list":
       methodSkills(cb);
       return;
+    case "cron.list":
+      methodCronList(cb);
+      return;
+    case "cron.create":
+      methodCronCreate(params, cb);
+      return;
+    case "cron.delete":
+      methodCronDelete(params, cb);
+      return;
+    case "cron.run-now":
+      methodCronRunNow(params, cb);
+      return;
     case "system.resources":
       methodResources(cb);
       return;
@@ -1166,6 +1427,7 @@ function main() {
   const token = ensureToken();
   const roots = loadApprovedRoots();
   const allowlist = loadAllowlist();
+  startCronScheduler(); // section-21 minute tick (fires allow-listed specs)
 
   const server = http.createServer((req, res) => {
     if (req.url === "/health") {
