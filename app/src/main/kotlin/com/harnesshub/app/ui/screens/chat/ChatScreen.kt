@@ -100,6 +100,13 @@ fun ChatScreen(onOpenSetup: () -> Unit = {}) {
                     else MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
+            TextButton(onClick = { viewModel.useEngine(ChatViewModel.Engine.OPENAI) }) {
+                Text(
+                    stringResource(R.string.chat_engine_compat),
+                    color = if (engine == ChatViewModel.Engine.OPENAI) MaterialTheme.colorScheme.primary
+                    else MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
         }
         if (showOpenCodeSetup) {
             AlertDialog(

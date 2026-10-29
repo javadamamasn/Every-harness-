@@ -173,20 +173,27 @@ OpenCode, OpenClaw, Codex, Gemini CLI, generic ACP/OpenAI-compatible, PTY fallba
       (Done so far: skills list/install/edit/delete over the bridge, models +
       provider switching, cron registry + minute scheduler + Schedules screen,
       memory/identity screen over fs primitives, masked env list/set/delete,
-      MCP servers (mcpServers in ~/.claude.json) + read-only plugins view.
-      Still open: tools/permissions screen polish (exec flag + modes already
-      live in the Hub rows) and OpenCode-side MCP/plugin config.)
+      MCP servers (mcpServers in ~/.claude.json) + read-only plugins view,
+      Tools/Permissions screen (exec flag switch, Claude allow/deny rules,
+      mode display) and plugin enable/disable toggles via settings.json.
+      Still open: OpenCode-side MCP/plugin config.)
 - [ ] M8: OpenClaw, Codex, Gemini CLI, OpenCode, generic OpenAI-compatible, ACP, PTY.
+      (M8.1 done: generic OpenAI-compatible adapter — OpenAiSse pure parser
+      + unit tests on live-router fixtures, OpenAiCompatClient (GET /v1/models,
+      SSE POST /v1/chat/completions), CompatSettingsStore (Vault-sealed key),
+      Providers screen (probe/model pick/save), "Router" engine in chat with
+      streaming turns. Wire shape live-verified on the on-device local router
+      127.0.0.1:20128 (models 200, SSE chunks with usage). UI not yet
+      exercised on an installed APK.)
 - [ ] M9: files, terminal, logs/diagnostics, usage.
 - [ ] M10: accessibility, perf, screenshot tests, docs, release build.
 
 ## Next steps
 
-1. M7 residual: tools/permissions screen (per-session approval modes + allow/deny
-   rules) — the exec flag, allow-list and resource modes already live in the Hub
-   rows; OpenCode-side mcp/plugin config surfaces; MCP test-connection via
+1. M7 residual: OpenCode-side mcp/plugin config surfaces; MCP test-connection via
    `claude mcp list` once exec.run flag UX is decided.
-2. M8: OpenClaw, Codex, Gemini CLI, generic OpenAI-compatible, generic ACP,
-   PTY fallback adapters.
+2. M8: M8.1 (generic OpenAI-compatible adapter) done — next: Codex CLI probes
+   (CLI not installed on device), OpenClaw gateway recon, Gemini CLI, generic
+   ACP, PTY fallback terminal.
 3. M9: files, terminal, logs/diagnostics, usage screens.
 4. M10: accessibility, performance, screenshot tests, docs, release build.

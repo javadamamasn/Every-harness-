@@ -33,6 +33,7 @@ import com.harnesshub.app.ui.screens.mcp.McpScreen
 import com.harnesshub.app.ui.screens.memory.MemoryScreen
 import com.harnesshub.app.ui.screens.models.ModelsScreen
 import com.harnesshub.app.ui.screens.plugins.PluginsScreen
+import com.harnesshub.app.ui.screens.providers.CompatProvidersScreen
 import com.harnesshub.app.ui.screens.projects.ProjectsScreen
 import com.harnesshub.app.ui.screens.sessions.SessionsScreen
 import com.harnesshub.app.ui.screens.settings.SettingsScreen
@@ -99,6 +100,7 @@ fun HarnessHubNavHost() {
                     onOpenMcp = { navController.navigate("mcp") },
                     onOpenPlugins = { navController.navigate("plugins") },
                     onOpenTools = { navController.navigate("tools") },
+                    onOpenCompat = { navController.navigate("compat") },
                 )
             }
             composable("chat") { ChatScreen(onOpenSetup = { navController.navigate("wizard") }) }
@@ -110,6 +112,7 @@ fun HarnessHubNavHost() {
             composable("mcp") { McpScreen() }
             composable("plugins") { PluginsScreen() }
             composable("tools") { ToolsScreen() }
+            composable("compat") { CompatProvidersScreen() }
             composable("sessions") {
                 SessionsScreen(onOpenChat = { navController.navigate("chat") })
             }

@@ -154,6 +154,16 @@
     <string name="plugins_marketplaces">Marketplaces</string>
     <string name="plugins_partial_note">Catalogue over Claude Code installed_plugins.json / known_marketplaces.json plus enable/disable writes into settings.json (timestamped backup). Install/uninstall and marketplace management land later.</string>
     <string name="hub_open_tools">Tools…</string>
+    <string name="hub_open_compat">Providers…</string>
+    <string name="chat_engine_compat">Router</string>
+    <string name="compat_title">OpenAI-compatible router</string>
+    <string name="compat_field_url">Base URL, e.g. http://127.0.0.1:20128</string>
+    <string name="compat_field_key">API key (optional)</string>
+    <string name="compat_key_set">API key saved — enter to replace</string>
+    <string name="compat_probe">Probe /v1/models</string>
+    <string name="compat_model_label">Model: %1$s</string>
+    <string name="compat_active">active</string>
+    <string name="compat_partial_note">Any loopback or remote server exposing /v1/models and /v1/chat/completions. Live-verified against the on-device local router; streaming SSE, no session object, recent turns kept in-app. Tool calls/approvals and model switching hero card land later.</string>
     <string name="tools_title">Tools &amp; Permissions</string>
     <string name="tools_exec_toggle">Arbitrary command execution (exec.run)</string>
     <string name="tools_exec_note">Bridge-wide flag, audit-logged. The allow-list of launch specs lives in ~/.harnesshub/allowlist.json.</string>

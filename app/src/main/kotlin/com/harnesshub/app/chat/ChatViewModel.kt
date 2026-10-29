@@ -2,6 +2,7 @@ package com.harnesshub.app.chat
 
 import android.app.Application
 import com.harnesshub.app.data.BridgeSettingsStore
+import com.harnesshub.app.data.CompatSettingsStore
 import com.harnesshub.app.data.HermesSettingsStore
 import com.harnesshub.app.data.OpenCodeSettingsStore
 import com.harnesshub.app.data.ProjectsStore
@@ -51,11 +52,12 @@ object SessionOpen {
 
 class ChatViewModel(application: Application) {
 
-    enum class Engine { HERMES, CLAUDE, OPENCODE, CODEX }
+    enum class Engine { HERMES, CLAUDE, OPENCODE, CODEX, OPENAI }
 
     private val settings = HermesSettingsStore(application)
     private val bridgeSettings = BridgeSettingsStore(application)
     private val opencodeSettings = OpenCodeSettingsStore(application)
+    private val compatSettings = CompatSettingsStore(application)
     private val sessionStore = SessionStore(application)
     private val projectsStore = ProjectsStore(application)
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
@@ -162,6 +164,7 @@ class ChatViewModel(application: Application) {
                     Engine.CLAUDE -> claudeTurn(text)
                     Engine.OPENCODE -> opencodeTurn(text)
                     Engine.CODEX -> codexTurn(text)
+                    Engine.OPENAI -> openaiTurn(text)
                 }
             } catch (e: Exception) {
                 onEvent(ChatEvent.ErrorEvent("send", e.message ?: "send failed", retryable = true))
@@ -330,6 +333,45 @@ class ChatViewModel(application: Application) {
             outcome.events.forEach { onEvent(it) }
         } finally {
             transport.close()
+        }
+    }
+
+    /** M8 adapter turn: streamed /v1/chat/completions against a configured
+     * OpenAI-compatible endpoint. The HTTP transport has no session object,
+     * so this engine maintains its own alternating user/assistant history
+     * (the shared reducer intentionally renders only assistant turns).
+     * Errors surface as ChatEvent. */
+    private val compatHistory = mutableListOf<Pair<String, String>>()
+
+    private suspend fun openaiTurn(text: String) {
+        val prefs = compatSettings.settings().first()
+        if (!prefs.configured) {
+            onEvent(ChatEvent.ErrorEvent("provider", "compat_not_configured", retryable = false))
+            return
+        }
+        val turnId = "oai-${System.currentTimeMillis()}"
+        compatHistory.add("user" to text)
+        val client = OpenAiCompatClient(prefs.baseUrl, prefs.apiKey.takeIf { it.isNotBlank() })
+        var assistantText = ""
+        val result = client.streamChat(
+            model = prefs.model,
+            history = compatHistory.toList(),
+            turnId = turnId,
+        ) { event ->
+            if (event is ChatEvent.TextDelta && event.turnId == turnId) assistantText += event.text
+            onEvent(event)
+        }
+        if (result.isSuccess) {
+            if (assistantText.isNotBlank()) compatHistory.add("assistant" to assistantText)
+        } else {
+            compatHistory.removeAt(compatHistory.lastIndex) // failed user turn is not history
+            onEvent(
+                ChatEvent.ErrorEvent(
+                    "provider",
+                    result.exceptionOrNull()?.message ?: "compat request failed",
+                    retryable = true,
+                ),
+            )
         }
     }
 
