@@ -96,7 +96,18 @@ OpenCode, OpenClaw, Codex, Gemini CLI, generic ACP/OpenAI-compatible, PTY fallba
       M7.1/M7.2/M7.3 done: Skills + Models screens live (skills.list +
       /config/providers, verified); preferred-model switching with live-verified
       model endpoints; skill INSTALL via bridge fs.write with live-verified
-      roundtrip. Remaining M7: skill edit/delete UI, plugins, cron, memory, env.
+      roundtrip; M7.4 skill edit/delete UI done. Remaining M7: plugins, MCP,
+      tools/permissions, memory/identity, env.
+
+      M7.5 cron done (section 21): bridge `cron.list/create/delete/run-now` +
+      minute scheduler — jobs reference allow-listed launch specs (name +
+      argument array, never a shell string, per Appendix F), 5-field spec
+      validator (lists/ranges/steps/dow-names, wrapped dow when lo>hi), nextRunAt
+      per job, run history capped at 20 with exit capture, audit `cron.*`,
+      durable file ~/.harnesshub/cron.json (0600). Verification: conformance
+      44/44 (spec/allowlist/injection refusals + roundtrip) and a live
+      minute-tick fire test (job fired once on the tick, no double-fire).
+      App: CronScreen (presets + raw spec dialog, run-now, delete) + Hub entry.
 
       OpenCode Tier-1 DIRECT adapter done (section 20): harness/opencode with
       OpenCodeClient (HTTP+SSE, OpenAPI-derived, no bridge in default path;
@@ -109,6 +120,9 @@ OpenCode, OpenClaw, Codex, Gemini CLI, generic ACP/OpenAI-compatible, PTY fallba
       snapshot; permission-reply endpoint remains snapshot-derived (Partial
       until exercised live).
 - [ ] M7: skills, plugins, MCP, tools/permissions, providers/models, cron, memory, env.
+      (Done so far: skills list/install/edit/delete over the bridge, models +
+      provider switching, cron registry + minute scheduler + Schedules screen.
+      Still open: plugins, MCP, tools/permissions, memory/identity, env.)
 - [ ] M8: OpenClaw, Codex, Gemini CLI, OpenCode, generic OpenAI-compatible, ACP, PTY.
 - [ ] M9: files, terminal, logs/diagnostics, usage.
 - [ ] M10: accessibility, perf, screenshot tests, docs, release build.

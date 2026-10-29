@@ -26,6 +26,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.harnesshub.app.R
 import com.harnesshub.app.ui.screens.chat.ChatScreen
+import com.harnesshub.app.ui.screens.cron.CronScreen
 import com.harnesshub.app.ui.screens.hub.HubScreen
 import com.harnesshub.app.ui.screens.models.ModelsScreen
 import com.harnesshub.app.ui.screens.projects.ProjectsScreen
@@ -87,11 +88,13 @@ fun HarnessHubNavHost() {
                 HubScreen(
                     onOpenHermes = { navController.navigate("chat") },
                     onOpenTasks = { navController.navigate("tasks") },
+                    onOpenCron = { navController.navigate("cron") },
                 )
             }
             composable("chat") { ChatScreen(onOpenSetup = { navController.navigate("wizard") }) }
             composable("projects") { ProjectsScreen() }
             composable("tasks") { TasksScreen() }
+            composable("cron") { CronScreen() }
             composable("sessions") {
                 SessionsScreen(onOpenChat = { navController.navigate("chat") })
             }

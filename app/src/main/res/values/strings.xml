@@ -99,4 +99,24 @@
     <string name="wizard_status_pending">Waiting for the bridge</string>
     <string name="wizard_hint_termux">Install Termux from F-Droid, then grant the permission when the system asks.</string>
     <string name="wizard_hint_external_apps">Add allow-external-apps=true to ~/.termux/termux.properties in Termux.</string>
+    <string name="hub_open_cron">Cron…</string>
+    <string name="cron_title">Schedules</string>
+    <string name="cron_create">New…</string>
+    <string name="cron_empty">No schedules yet. Create one that launches an allow-listed spec.</string>
+    <string name="cron_create_title">New schedule</string>
+    <string name="cron_delete_title">Delete schedule</string>
+    <string name="cron_delete_body">Remove this job from ~/.harnesshub/cron.json? It will never fire again.</string>
+    <string name="cron_field_spec">Cron spec (m h dom mon dow)</string>
+    <string name="cron_field_name">Allow-listed launch spec name</string>
+    <string name="cron_field_args">Arguments (optional, space-separated)</string>
+    <string name="cron_preset_hourly">Hourly</string>
+    <string name="cron_preset_daily">Daily 09:00</string>
+    <string name="cron_preset_every15">Every 15 min</string>
+    <string name="cron_preset_weekly">Weekly Sun 09:00</string>
+    <string name="cron_run_now">Run now</string>
+    <string name="cron_next_run">Next run: %1$s</string>
+    <string name="cron_next_run_never">Next run: spec never matches</string>
+    <string name="cron_last_run">Last run: %1$s</string>
+    <string name="cron_never_run">Never run</string>
+    <string name="cron_partial_note">Jobs live in ~/.harnesshub/cron.json and fire only while the bridge is running. Every launch resolves through the bridge allow-list (argument arrays only — no shell strings).</string>
 </resources>
