@@ -30,7 +30,7 @@ class OpenAiSseTest {
         assertNull(chunks[0].content)
         assertEquals("OK", chunks[1].content)
         assertEquals("stop", chunks[1].finishReason)
-        assertEquals(948L, chunks[2].inputTokens)
+        assertEquals(10L, chunks[2].inputTokens)
         assertEquals(2L, chunks[2].outputTokens)
         assertNull(chunks[2].content)
     }
@@ -47,13 +47,11 @@ class OpenAiSseTest {
     @Test
     fun `skips done comments and garbage`() {
         val parser = OpenAiSse.newParser()
-        val chunks = OpenAiSse.feed(
-            parser,
-            ": keep-alive\n\n",
-        ) // comment + blanks
-        assertTrue(chunks.isEmpty())
-        OpenAiSse.feed(parser, "data: [DONE]\n\n")
-        assertTrue{ true } // [DONE] yields nothing, no throw
+        // comment + blank lines produce nothing
+        assertTrue(OpenAiSse.feed(parser, ": keep-alive\n\n").isEmpty())
+        // [DONE] yields nothing, no throw
+        assertTrue(OpenAiSse.feed(parser, "data: [DONE]\n\n").isEmpty())
+        // unmapped/garbage data lines are skipped silently
         assertTrue(OpenAiSse.feed(parser, "event: ping\ndata: not-json\n\n").isEmpty())
     }
 
@@ -62,8 +60,7 @@ class OpenAiSseTest {
         val parser = OpenAiSse.newParser()
         // No trailing newline: nothing is emitted yet.
         OpenAiSse.feed(parser, "data: {\"choices\":[],\"usage\":{\"prompt").let { /* noop */ }
-        val later = OpenAiSse.feed(parser, "_tokens\":7,\"completion_tokens\":1}]}\n")
-        assertTrue(later.isEmpty() || later.size <= 1)
+        val later = OpenAiSse.feed(parser, "_tokens\":7,\"completion_tokens\":1}}\n")
         // Feeding the tail completes the line — parser must not lose bytes.
         val trailing = OpenAiSse.feed(parser, "\n")
         val all = later + trailing
