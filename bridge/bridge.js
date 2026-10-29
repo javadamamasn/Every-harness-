@@ -18,11 +18,11 @@
  *          fs.list/stat/read/write/mkdir/move/delete/watch,
  *          process.start/stop/restart/status/list/stdin,
  *          logs.tail, exec.run, pty.open/write/resize/close, cron.list/create/
- *          delete/run-now, skills.list
+ *          delete/run-now, skills.list, env.list/set/delete
  *
  * Error codes: AUTH_FAILED, FORBIDDEN_PATH, NOT_ALLOWLISTED, NOT_FOUND,
  *              ALREADY_RUNNING, TIMEOUT, PROTOCOL_MISMATCH, INTERNAL,
- *              BAD_CRON_SPEC.
+ *              BAD_CRON_SPEC, BAD_ENV_KEY.
  * Errors never leak stack traces or tokens.
  */
 "use strict";
@@ -723,6 +723,99 @@ function startCronScheduler() {
   setInterval(cronTick, 20000);
 }
 
+// ── env (section 13): masked env vars from ~/.hermes/.env ───────────────────
+// Only KEY=value lines are interpreted (comments/blank lines preserved on
+// write). Values are never raw over the wire except a tiny safe key set;
+// set/delete are audit-logged without values. ~/.bashrc exports are NOT
+// parsed here (honest partial - structured .env first). Biometric reveal is
+// app-side; the bridge exposes no unmasked read of secret keys at all.
+const ENV_FILE = path.join(os.homedir(), ".hermes", ".env");
+const ENV_SAFE_KEYS = new Set([
+  "PATH", "SHELL", "HOME", "LANG", "TZ", "TERM", "TMPDIR", "PREFIX", "PWD", "HOSTNAME",
+]);
+const ENV_KEY_RE = /^[A-Za-z_][A-Za-z0-9_]*$/;
+
+function envMaskValue(key, value) {
+  if (ENV_SAFE_KEYS.has(key)) return value;
+  return `***(hides ${Buffer.byteLength(value, "utf8")}B)`;
+}
+
+function methodEnvList(cb) {
+  const vars = [];
+  const lines = envReadLines();
+  for (const line of lines) {
+    const key = envKeyOf(line);
+    if (!key) continue;
+    vars.push({ key, value: envMaskValue(key, envValueOf(line)), size: Buffer.byteLength(envValueOf(line), "utf8") });
+  }
+  cb(null, { file: ENV_FILE, safeKeys: [...ENV_SAFE_KEYS], vars });
+}
+
+const ENV_LINE_TRIMMED = (line) => line.trim();
+
+function envReadLines() {
+  try {
+    return fs.readFileSync(ENV_FILE, "utf8").split("\n");
+  } catch (_) {
+    return [];
+  }
+}
+
+function envKeyOf(line) {
+  const m = ENV_LINE_TRIMMED(line).match(/^([A-Za-z_][A-Za-z0-9_]*)[ \t]*=/);
+  return m ? m[1] : null;
+}
+
+function envValueOf(line) {
+  const trimmed = ENV_LINE_TRIMMED(line);
+  const eq = trimmed.indexOf("=");
+  let value = trimmed.slice(eq + 1);
+  if (value.startsWith('"') && value.endsWith('"') && value.length >= 2) value = value.slice(1, -1);
+  return value;
+}
+
+function methodEnvSet(params, cb) {
+  const key = params && params.key;
+  const value = params && params.value;
+  if (typeof key !== "string" || !ENV_KEY_RE.test(key)) {
+    return cb({ code: "BAD_ENV_KEY", message: "key must match [A-Za-z_][A-Za-z0-9_]*" });
+  }
+  if (typeof value !== "string") return cb({ code: "BAD_ENV_KEY", message: "value required (string)" });
+  const lines = envReadLines();
+  const next = lines.filter((l) => envKeyOf(l) !== key);
+  next.push(`${key}=${value}`);
+  try {
+    ensureHubDir();
+    fs.mkdirSync(path.dirname(ENV_FILE), { recursive: true });
+    const tmp = `${ENV_FILE}.tmp-${Date.now()}`;
+    fs.writeFileSync(tmp, `${next.join("\n")}\n`, { mode: 0o600 });
+    fs.renameSync(tmp, ENV_FILE);
+  } catch (e) {
+    return cb({ code: "INTERNAL", message: "cannot write env file" });
+  }
+  audit("env.set", { key });
+  cb(null, { key, set: true, file: ENV_FILE });
+}
+
+function methodEnvDelete(params, cb) {
+  const key = params && params.key;
+  if (typeof key !== "string" || !ENV_KEY_RE.test(key)) {
+    return cb({ code: "BAD_ENV_KEY", message: "key must match [A-Za-z_][A-Za-z0-9_]*" });
+  }
+  const lines = envReadLines();
+  const next = lines.filter((l) => envKeyOf(l) !== key);
+  if (next.length === lines.length) return cb({ code: "NOT_FOUND", message: `no env key ${key}` });
+  try {
+    const tmp = `${ENV_FILE}.tmp-${Date.now()}`;
+    fs.writeFileSync(tmp, `${next.join("\n")}\n`, { mode: 0o600 });
+    fs.renameSync(tmp, ENV_FILE);
+  } catch (e) {
+    return cb({ code: "INTERNAL", message: "cannot write env file" });
+  }
+  audit("env.delete", { key });
+  cb(null, { key, deleted: true });
+}
+
 function methodSkills(cb) {
   const dirs = [
     path.join(os.homedir(), ".claude", "skills"),
@@ -1380,6 +1473,15 @@ function dispatch(session, env, roots, allowlist) {
       return;
     case "cron.run-now":
       methodCronRunNow(params, cb);
+      return;
+    case "env.list":
+      methodEnvList(cb);
+      return;
+    case "env.set":
+      methodEnvSet(params, cb);
+      return;
+    case "env.delete":
+      methodEnvDelete(params, cb);
       return;
     case "system.resources":
       methodResources(cb);

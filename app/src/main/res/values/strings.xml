@@ -126,4 +126,14 @@
     <string name="memory_size">Size: %1$d B</string>
     <string name="memory_missing">Not present</string>
     <string name="memory_partial_note">Edits write through the bridge (fs.write keeps a timestamped backup). Diff-before-save and backup restore land at M10.</string>
+    <string name="hub_open_env">Env…</string>
+    <string name="env_title">Environment</string>
+    <string name="env_add">Add…</string>
+    <string name="env_add_title">Set variable</string>
+    <string name="env_delete_title">Delete variable</string>
+    <string name="env_delete_body">Remove %1$s from ~/.hermes/.env?</string>
+    <string name="env_field_key">Key (A_Z, no spaces)</string>
+    <string name="env_field_value">Value</string>
+    <string name="env_empty">No variables in ~/.hermes/.env yet.</string>
+    <string name="env_partial_note">Values are masked on the bridge for non-safe keys (safe keys: PATH, SHELL, HOME, LANG, TZ, TERM, TMPDIR, PREFIX, PWD, HOSTNAME). No unmasked read exists; biometric reveal and ~/.bashrc parsing land later. Writes are audit-logged.</string>
 </resources>

@@ -253,6 +253,57 @@ async function main() {
     stopBridge(bridgeD);
   }
 
+  { // M7 section-13 env (masked values, audited writes over ~/.hermes/.env)
+    const bridgeE = await startBridge();
+    const c = await connect({ port: bridgeE.port });
+    const cToken = fs.readFileSync(path.join(bridgeE.home, ".harnesshub/bridge-token"), "utf8").trim();
+    await reqTimeout(c.hello(cToken), 3000);
+
+    const empty = await reqTimeout(c.req("env.list", {}), 3000);
+    check("env.list empty on fresh home", empty && empty.result && empty.result.vars.length === 0, empty);
+
+    const badKey = await reqTimeout(c.req("env.set", { key: "WITH-DASH", value: "v" }), 3000);
+    check("env.set dash key -> BAD_ENV_KEY", badKey && badKey.error && badKey.error.code === "BAD_ENV_KEY", badKey);
+
+    const noVal = await reqTimeout(c.req("env.set", { key: "OK_KEY" }), 3000);
+    check("env.set missing value -> BAD_ENV_KEY", noVal && noVal.error && noVal.error.code === "BAD_ENV_KEY", noVal);
+
+    const secret = await reqTimeout(c.req("env.set", { key: "SECRET_TOKEN", value: "abc" }), 3000);
+    check("env.set secret ok", secret && secret.result && secret.result.set === true, secret);
+
+    const pathSet = await reqTimeout(c.req("env.set", { key: "PATH", value: "/x/y" }), 3000);
+    check("env.set safe key ok", pathSet && pathSet.result && pathSet.result.set === true, pathSet);
+
+    const listed = await reqTimeout(c.req("env.list", {}), 3000);
+    const secretRow = listed.result && listed.result.vars.find((v) => v.key === "SECRET_TOKEN");
+    check("env.list masks secrets", secretRow && secretRow.value.startsWith("***(hides") && !secretRow.value.includes("abc"), secretRow);
+
+    const pathRow = listed.result && listed.result.vars.find((v) => v.key === "PATH");
+    check("env.list keeps safe keys raw", pathRow && typeof pathRow.value === "string" && pathRow.value.length > 0 && pathRow.value !== "***", pathRow);
+
+    const noKey = await reqTimeout(c.req("env.delete", { key: "NOPE_" }), 3000);
+    check("env.delete unknown -> NOT_FOUND", noKey && noKey.error && noKey.error.code === "NOT_FOUND", noKey);
+
+    const del = await reqTimeout(c.req("env.delete", { key: "SECRET_TOKEN" }), 3000);
+    check("env.delete", del && del.result && del.result.deleted === true, del);
+
+    const after = await reqTimeout(c.req("env.list", {}), 3000);
+    const pathsOnly = after && after.result && after.result.vars.length === 1 && after.result.vars[0].key === "PATH";
+    check("env.list only PATH after delete", pathsOnly, after);
+
+    const delPath = await reqTimeout(c.req("env.delete", { key: "PATH" }), 3000);
+    check("env.delete safe key", delPath && delPath.result && delPath.result.deleted === true, delPath);
+
+    const finalList = await reqTimeout(c.req("env.list", {}), 3000);
+    check("env.list empty after all deletes", finalList && finalList.result && finalList.result.vars.length === 0, finalList);
+
+    const mode = fs.statSync(path.join(bridgeE.home, ".hermes", ".env")).mode & 0o777;
+    check("env file perms 0600", mode === 0o600, { mode: mode.toString(8) });
+
+    c.close();
+    stopBridge(bridgeE);
+  }
+
   console.log(`\n${passed} passed, ${failures} failed`);
   process.exitCode = failures ? 1 : 0;
 }

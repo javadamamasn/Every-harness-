@@ -27,6 +27,7 @@ import androidx.navigation.compose.rememberNavController
 import com.harnesshub.app.R
 import com.harnesshub.app.ui.screens.chat.ChatScreen
 import com.harnesshub.app.ui.screens.cron.CronScreen
+import com.harnesshub.app.ui.screens.env.EnvScreen
 import com.harnesshub.app.ui.screens.hub.HubScreen
 import com.harnesshub.app.ui.screens.memory.MemoryScreen
 import com.harnesshub.app.ui.screens.models.ModelsScreen
@@ -91,6 +92,7 @@ fun HarnessHubNavHost() {
                     onOpenTasks = { navController.navigate("tasks") },
                     onOpenCron = { navController.navigate("cron") },
                     onOpenMemory = { navController.navigate("memory") },
+                    onOpenEnv = { navController.navigate("env") },
                 )
             }
             composable("chat") { ChatScreen(onOpenSetup = { navController.navigate("wizard") }) }
@@ -98,6 +100,7 @@ fun HarnessHubNavHost() {
             composable("tasks") { TasksScreen() }
             composable("cron") { CronScreen() }
             composable("memory") { MemoryScreen() }
+            composable("env") { EnvScreen() }
             composable("sessions") {
                 SessionsScreen(onOpenChat = { navController.navigate("chat") })
             }
