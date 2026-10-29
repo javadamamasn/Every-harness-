@@ -168,8 +168,11 @@ OpenCode, OpenClaw, Codex, Gemini CLI, generic ACP/OpenAI-compatible, PTY fallba
 
 ## Next steps
 
-1. M2: implement the bridge daemon (Node, loopback-only, Appendix A protocol) and
-   the Termux onboarding wizard; contract-test the bridge against a fake.
-2. M3: port the discovery engine over the bridge probes (binary/footprint/port).
-3. M4: extract the transport from Hermes-Pocket's `GatewayClient` ideas into
-   `core:transport`, then implement `harness:hermes` and the chat reducer UI.
+1. M7 residual: tools/permissions screen (per-session approval modes + allow/deny
+   rules) — the exec flag, allow-list and resource modes already live in the Hub
+   rows; OpenCode-side mcp/plugin config surfaces; MCP test-connection via
+   `claude mcp list` once exec.run flag UX is decided.
+2. M8: OpenClaw, Codex, Gemini CLI, generic OpenAI-compatible, generic ACP,
+   PTY fallback adapters.
+3. M9: files, terminal, logs/diagnostics, usage screens.
+4. M10: accessibility, performance, screenshot tests, docs, release build.
