@@ -147,3 +147,8 @@ Append-only log. Format: date — decision — alternatives — reason — verif
 - Verification: conformance now 44/44 (bad/out-of-range/injection specs, off-allowlist refusal, create→list nextRunAt, run-now spawn + history, unknown NOT_FOUND, delete, empty-after-delete) and a live minute-tick test: `* * * * *` job fired exactly once on the tick, no double-fire within the same minute, cleaned up after.
 - Honest partials: presets/human-readable builder are UI-side chips (raw spec mode + four presets), not a full natural-language builder; run history is 20-entry per job, not a paginated log; scheduler fires only while the bridge process is alive (Doze/SOUL of the tether service is the M7.5 keep-alive story, not a guarantee).
 - App: CronScreen (list, create dialog with presets + raw spec, run-now, delete confirm) + Hub "Cron…" entry; CronViewModel mirrors the Skills transport helper. Next: plugins, MCP, tools/permissions, memory/identity, env.
+
+## M7.7 memory/identity (2026-10-29)
+- MemoryScreen (section 13 row) over existing bridge primitives — no new bridge surface needed: fs.stat (present/missing honestly), fs.read, fs.write (Atomic tmp+rename, timestamped backup). Candidate set fixed to the on-device verified layout: ~/.hermes/SOUL.md, ~/.hermes/memories/MEMORY.md + USER.md, ~/CLAUDE.md, ~/.claude/CLAUDE.md, ~/.codex/AGENTS.md — cross-checked by live probe (3 present, 3 missing, SOUL.md head read back).
+- Honest partials: no diff-before-save, no backup restore/choose-backup list, no biometric reveal (memory files may contain no secrets — confirmed at candidate level only); missing files are shown, not auto-created.
+- CI latest green (cron + conformance 44/44 on f9e26f6). Next: plugins, MCP, tools/permissions, env.

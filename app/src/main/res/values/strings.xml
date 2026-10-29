@@ -119,4 +119,11 @@
     <string name="cron_last_run">Last run: %1$s</string>
     <string name="cron_never_run">Never run</string>
     <string name="cron_partial_note">Jobs live in ~/.harnesshub/cron.json and fire only while the bridge is running. Every launch resolves through the bridge allow-list (argument arrays only — no shell strings).</string>
+    <string name="hub_open_memory">Memory…</string>
+    <string name="memory_title">Memory &amp; Identity</string>
+    <string name="memory_edit_title">Edit file</string>
+    <string name="memory_empty">No identity files checked yet.</string>
+    <string name="memory_size">Size: %1$d B</string>
+    <string name="memory_missing">Not present</string>
+    <string name="memory_partial_note">Edits write through the bridge (fs.write keeps a timestamped backup). Diff-before-save and backup restore land at M10.</string>
 </resources>

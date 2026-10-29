@@ -109,6 +109,16 @@ OpenCode, OpenClaw, Codex, Gemini CLI, generic ACP/OpenAI-compatible, PTY fallba
       minute-tick fire test (job fired once on the tick, no double-fire).
       App: CronScreen (presets + raw spec dialog, run-now, delete) + Hub entry.
 
+      M7.7 memory/identity done (section 13 row): MemoryScreen over bridge
+      fs.stat/fs.read/fs.write — candidate file set fixed to the device-verified
+      layout (~/.hermes/SOUL.md, ~/.hermes/memories/MEMORY.md + USER.md,
+      ~/CLAUDE.md, ~/.claude/CLAUDE.md, ~/.codex/AGENTS.md); present files open
+      in a plain multiline editor, saves go through fs.write (timestamped
+      backup), missing files surface honestly as "not present". Live probe:
+      3 present / 3 missing as expected, SOUL.md content read back. Partial:
+      no diff-before-save and no restore-from-backup editor yet (M10); no
+      biometric reveal wrapper yet (values are plain md files, no secrets).
+
       OpenCode Tier-1 DIRECT adapter done (section 20): harness/opencode with
       OpenCodeClient (HTTP+SSE, OpenAPI-derived, no bridge in default path;
       Basic auth when OPENCODE_SERVER_PASSWORD set), OpenCodeEventMapper
@@ -121,8 +131,9 @@ OpenCode, OpenClaw, Codex, Gemini CLI, generic ACP/OpenAI-compatible, PTY fallba
       until exercised live).
 - [ ] M7: skills, plugins, MCP, tools/permissions, providers/models, cron, memory, env.
       (Done so far: skills list/install/edit/delete over the bridge, models +
-      provider switching, cron registry + minute scheduler + Schedules screen.
-      Still open: plugins, MCP, tools/permissions, memory/identity, env.)
+      provider switching, cron registry + minute scheduler + Schedules screen,
+      memory/identity screen over fs primitives.
+      Still open: plugins, MCP, tools/permissions, env.)
 - [ ] M8: OpenClaw, Codex, Gemini CLI, OpenCode, generic OpenAI-compatible, ACP, PTY.
 - [ ] M9: files, terminal, logs/diagnostics, usage.
 - [ ] M10: accessibility, perf, screenshot tests, docs, release build.
