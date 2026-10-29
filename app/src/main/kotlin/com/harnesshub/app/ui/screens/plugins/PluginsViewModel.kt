@@ -15,11 +15,14 @@ import kotlinx.serialization.json.JsonPrimitive
 import okhttp3.OkHttpClient
 import okhttp3.Request
 
+import com.harnesshub.transport.PluginJson
+
 /**
- * Plugins (section 13 row): read-only catalogue over Claude Code's
+ * Plugins (section 13 row): catalogue over Claude Code's
  * installed_plugins.json and known_marketplaces.json (verified on-device
- * file shapes, 2026-10-29). Install/uninstall and enable/disable land later;
- * nothing is mutated here.
+ * file shapes, 2026-10-29) plus enable/disable toggles in settings.json
+ * enabledPlugins through pure PluginJson transforms. Install/uninstall land
+ * later; nothing else is mutated here.
  */
 class PluginsViewModel(private val application: Application) {
 
@@ -30,6 +33,8 @@ class PluginsViewModel(private val application: Application) {
         val name: String,
         val marketplace: String,
         val version: String,
+        val pluginId: String,
+        val enabled: Boolean,
     )
 
     data class MarketplaceRow(
@@ -50,6 +55,35 @@ class PluginsViewModel(private val application: Application) {
     init {
         refresh()
     }
+
+    fun setEnabled(pluginId: String, on: Boolean) {
+        scope.launch {
+            runCatching {
+                val read = bridgeRequest(
+                    "fs.read",
+                    BridgeJson.obj("path" to settingsPath(), "length" to 2_000_000),
+                )
+                val original = BridgeJson.string(read, "content") ?: ""
+                val size = BridgeJson.int(read, "size") ?: original.length
+                if (original.length < size) {
+                    throw IllegalStateException("settings larger than window — refusing rewrite")
+                }
+                val next = PluginJson.setPluginEnabled(original, pluginId, on)
+                bridgeRequest("fs.write", BridgeJson.obj("path" to settingsPath(), "content" to next))
+            }.onSuccess {
+                _state.value = _state.value.copy(error = null)
+                refresh()
+            }.onFailure {
+                _state.value = _state.value.copy(error = it.message ?: "plugin toggle failed")
+            }
+        }
+    }
+
+    private suspend fun settingsPath(): String =
+        homePath()?.plus("/.claude/settings.json") ?: throw IllegalStateException("no bridge home")
+
+    private suspend fun homePath(): String =
+        BridgeJson.string(bridgeRequest("system.info"), "home")
 
     fun refresh() {
         scope.launch {
@@ -84,6 +118,11 @@ class PluginsViewModel(private val application: Application) {
                     "fs.read",
                     BridgeJson.obj("path" to "$home/.claude/plugins/known_marketplaces.json"),
                 )
+                val cfgRes = transport.request(
+                    "fs.read",
+                    BridgeJson.obj("path" to "$home/.claude/settings.json", "length" to 2_000_000),
+                )
+                val cfgText = BridgeJson.string(cfgRes, "content") ?: ""
                 val pluginRows = mutableListOf<PluginRow>()
                 val pluginsObj = (installed as? kotlinx.serialization.json.JsonObject)
                     ?.get("plugins") as? kotlinx.serialization.json.JsonObject
@@ -100,6 +139,8 @@ class PluginsViewModel(private val application: Application) {
                             name = key.substringBefore("@"),
                             marketplace = key.substringAfter("@", ""),
                             version = BridgeJson.string(entry, "version") ?: "",
+                            pluginId = key,
+                            enabled = PluginJson.pluginEnabled(cfgText, key) ?: true,
                         ),
                     )
                 }
@@ -127,6 +168,31 @@ class PluginsViewModel(private val application: Application) {
             } finally {
                 transport.close()
             }
+        }
+    }
+
+    private suspend fun bridgeRequest(
+        method: String,
+        params: kotlinx.serialization.json.JsonElement? = null,
+    ): kotlinx.serialization.json.JsonElement {
+        val prefs = settings.settings().first()
+        if (!prefs.configured) throw IllegalStateException("bridge_not_configured")
+        val transport = BridgeTransport(
+            clientFactory = { listener ->
+                OkHttpClient().newWebSocket(
+                    Request.Builder().url("ws://127.0.0.1:${prefs.port}").build(),
+                    listener,
+                )
+            },
+        )
+        try {
+            transport.connect(prefs.token)
+            if (transport.awaitReady(8_000) !is BridgeTransport.State.Ready) {
+                throw IllegalStateException("bridge not ready")
+            }
+            return transport.request(method, params)
+        } finally {
+            transport.close()
         }
     }
 }

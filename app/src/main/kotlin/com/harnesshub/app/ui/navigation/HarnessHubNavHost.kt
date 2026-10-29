@@ -38,6 +38,7 @@ import com.harnesshub.app.ui.screens.sessions.SessionsScreen
 import com.harnesshub.app.ui.screens.settings.SettingsScreen
 import com.harnesshub.app.ui.screens.skills.SkillsScreen
 import com.harnesshub.app.ui.screens.tasks.TasksScreen
+import com.harnesshub.app.ui.screens.tools.ToolsScreen
 import com.harnesshub.app.ui.screens.wizard.WizardScreen
 
 private data class TopDestination(
@@ -97,6 +98,7 @@ fun HarnessHubNavHost() {
                     onOpenEnv = { navController.navigate("env") },
                     onOpenMcp = { navController.navigate("mcp") },
                     onOpenPlugins = { navController.navigate("plugins") },
+                    onOpenTools = { navController.navigate("tools") },
                 )
             }
             composable("chat") { ChatScreen(onOpenSetup = { navController.navigate("wizard") }) }
@@ -107,6 +109,7 @@ fun HarnessHubNavHost() {
             composable("env") { EnvScreen() }
             composable("mcp") { McpScreen() }
             composable("plugins") { PluginsScreen() }
+            composable("tools") { ToolsScreen() }
             composable("sessions") {
                 SessionsScreen(onOpenChat = { navController.navigate("chat") })
             }

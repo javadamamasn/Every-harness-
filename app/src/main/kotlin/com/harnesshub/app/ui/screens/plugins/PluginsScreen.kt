@@ -78,10 +78,21 @@ fun PluginsScreen() {
                 Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     Text("${plugin.name} @ ${plugin.marketplace}", style = MaterialTheme.typography.titleSmall)
                     Text(
-                        stringResource(R.string.plugins_version, plugin.version),
+                        stringResource(R.string.plugins_version, plugin.version) +
+                            (if (plugin.enabled) "" else " · " + stringResource(R.string.plugins_disabled)),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            stringResource(if (plugin.enabled) R.string.plugins_enabled else R.string.plugins_disabled),
+                            style = MaterialTheme.typography.labelSmall,
+                        )
+                        androidx.compose.material3.Switch(
+                            checked = plugin.enabled,
+                            onCheckedChange = { viewModel.setEnabled(plugin.pluginId, it) },
+                        )
+                    }
                 }
             }
         }

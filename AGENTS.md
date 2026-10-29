@@ -145,6 +145,20 @@ OpenCode, OpenClaw, Codex, Gemini CLI, generic ACP/OpenAI-compatible, PTY fallba
       cannot be added), no test-connection, no exposed-tools listing for
       servers, no plugin install/disable engine, no OpenCode mcp config.
 
+      M7.10 tools/permissions + plugin toggles done (section 13 row): ToolsScreen
+      — bridge execFlag Switch via `bridge.execFlag` (same state Hub already
+      wrote), Claude Code permission rules add/remove (allow/deny lists in
+      ~/.claude/settings.json) with defaultMode display; PluginsScreen rows
+      gained enable/disable Switches writing enabledPlugins (verified
+      on-device key "superpowers@superpowers-dev": false). Pure transforms in
+      core:transport PluginJson + JUnit suite (state read, toggle roundtrip,
+      sibling env/model preserved, refusals incl. invalid mode names). Live
+      settings.json roundtrip on-device: rule added→present→removed, plugin
+      false→true→false with env/model/marketplaces untouched, file restored
+      to its original shape (no permissions block, plugin back to false).
+      Partials: defaultMode switching is display-only; per-session toggles +
+      approvals inbox stay in Chat; no OpenCode-side MCP/plugin surfaces.
+
       OpenCode Tier-1 DIRECT adapter done (section 20): harness/opencode with
       OpenCodeClient (HTTP+SSE, OpenAPI-derived, no bridge in default path;
       Basic auth when OPENCODE_SERVER_PASSWORD set), OpenCodeEventMapper

@@ -43,7 +43,7 @@ import com.harnesshub.model.HarnessInstance
  */
 @OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 @Composable
-fun HubScreen(onOpenHermes: () -> Unit = {}, onOpenTasks: () -> Unit = {}, onOpenCron: () -> Unit = {}, onOpenMemory: () -> Unit = {}, onOpenEnv: () -> Unit = {}, onOpenMcp: () -> Unit = {}, onOpenPlugins: () -> Unit = {}) {
+fun HubScreen(onOpenHermes: () -> Unit = {}, onOpenTasks: () -> Unit = {}, onOpenCron: () -> Unit = {}, onOpenMemory: () -> Unit = {}, onOpenEnv: () -> Unit = {}, onOpenMcp: () -> Unit = {}, onOpenPlugins: () -> Unit = {}, onOpenTools: () -> Unit = {}) {
     val context = LocalContext.current
     val viewModel = remember { HubViewModel(context.applicationContext as android.app.Application) }
     val state by viewModel.state.collectAsState()
@@ -98,6 +98,9 @@ fun HubScreen(onOpenHermes: () -> Unit = {}, onOpenTasks: () -> Unit = {}, onOpe
             }
             TextButton(onClick = onOpenPlugins) {
                 Text(stringResource(R.string.hub_open_plugins))
+            }
+            TextButton(onClick = onOpenTools) {
+                Text(stringResource(R.string.hub_open_tools))
             }
             TextButton(onClick = { showSetup = true }) {
                 Text(stringResource(R.string.hub_bridge_settings))

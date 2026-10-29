@@ -152,5 +152,19 @@
     <string name="plugins_none">No plugins installed.</string>
     <string name="plugins_version">v%1$s</string>
     <string name="plugins_marketplaces">Marketplaces</string>
-    <string name="plugins_partial_note">Read-only view over Claude Code installed_plugins.json / known_marketplaces.json. Install/disable and marketplace management land later.</string>
+    <string name="plugins_partial_note">Catalogue over Claude Code installed_plugins.json / known_marketplaces.json plus enable/disable writes into settings.json (timestamped backup). Install/uninstall and marketplace management land later.</string>
+    <string name="hub_open_tools">Tools…</string>
+    <string name="tools_title">Tools &amp; Permissions</string>
+    <string name="tools_exec_toggle">Arbitrary command execution (exec.run)</string>
+    <string name="tools_exec_note">Bridge-wide flag, audit-logged. The allow-list of launch specs lives in ~/.harnesshub/allowlist.json.</string>
+    <string name="tools_default_mode">Claude permission mode: %1$s</string>
+    <string name="tools_default_mode_unset">Claude permission mode: unset (CLI default)</string>
+    <string name="tools_rules_title">Permission rules (~/.claude/settings.json)</string>
+    <string name="tools_add_title">Add rule</string>
+    <string name="tools_list_allow">Allow</string>
+    <string name="tools_list_deny">Deny</string>
+    <string name="tools_field_rule">Rule, e.g. Bash(rm *)</string>
+    <string name="tools_partial_note">Edits rewrite settings.json through fs.write (backup kept); size guard refuses over-window rewrites. Mode switching is display-only for now; per-session toggles and the approvals inbox live in Chat.</string>
+    <string name="plugins_enabled">Enabled</string>
+    <string name="plugins_disabled">Disabled</string>
 </resources>

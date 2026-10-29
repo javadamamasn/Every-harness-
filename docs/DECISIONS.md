@@ -164,3 +164,10 @@ Append-only log. Format: date — decision — alternatives — reason — verif
 - On-device verified shape: mcpServers count 1 (playwright, stdio script), 2 installed plugins (claude-mem@thedotmack v13.35.0, superpowers@superpowers-dev), 3 known marketplaces.
 - PluginsScreen read-only over installed_plugins.json + known_marketplaces.json (nothing mutates; install/disable engine later). No test-connection and no per-server tool listing yet (needs exec/claude mcp list — honest partial).
 - App still English-only; Hub actions row switched to FlowRow (8 buttons now wrap). Next M7 residual: tools/permissions dedupe with Hub rows, OpenCode-side MCP/plugin config.
+
+## M7.10 tools/permissions + plugin toggles (2026-10-29)
+- ToolsScreen (section 13 row): execFlag Switch (bridge.execFlag, same write path Hub used), Claude permission rules add/remove (permissions.allow/deny in ~/.claude/settings.json — block created if absent, empty lists removed on cleanup), defaultMode read-only display (real mode names default/acceptEdits/plan/bypassPermissions; switching UI deferred with the approvals engine instead of exposing one-tap bypassPermissions).
+- PluginsScreen upgrade: enable/disable Switches via enabledPlugins in settings.json (PluginJson transforms + JUnit; install/uninstall still deferred).
+- Pure text transforms core:transport PluginJson/PluginJsonTest (mode whitelist, duplicate/missing refusals, sibling keys preserved). Size guard + fs.write backup same as McpJson path.
+- Live on-device roundtrip: rule Bash(hh-probe *) added → present → removed (env/model/enabledPlugins byte-identical semantics), plugin superpowers@superpowers-dev false→true→false, final file matches original shape (no permissions block; probe left an empty allow[] which the cleanup removed — cf. PluginJson.removeRule deleting empty lists).
+- M7 residual after this: OpenCode-side MCP/plugin config, MCP test-connection, per-session tool toggles in Chat. Everything else in the M7 list is landed and CI-green.
