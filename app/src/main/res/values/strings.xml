@@ -136,4 +136,21 @@
     <string name="env_field_value">Value</string>
     <string name="env_empty">No variables in ~/.hermes/.env yet.</string>
     <string name="env_partial_note">Values are masked on the bridge for non-safe keys (safe keys: PATH, SHELL, HOME, LANG, TZ, TERM, TMPDIR, PREFIX, PWD, HOSTNAME). No unmasked read exists; biometric reveal and ~/.bashrc parsing land later. Writes are audit-logged.</string>
+    <string name="hub_open_mcp">MCP…</string>
+    <string name="mcp_title">MCP servers</string>
+    <string name="mcp_add_title">Add stdio server</string>
+    <string name="mcp_delete_title">Delete server</string>
+    <string name="mcp_delete_body">Remove %1$s from ~/.claude.json?</string>
+    <string name="mcp_field_name">Server name</string>
+    <string name="mcp_field_command">Command (absolute path)</string>
+    <string name="mcp_field_args">Arguments (optional, space-separated)</string>
+    <string name="mcp_empty">No MCP servers in ~/.claude.json.</string>
+    <string name="mcp_partial_note">Edits rewrite ~/.claude.json through fs.write (timestamped backup); a size guard refuses rewriting configs larger than the transport window. Test-connection and per-harness config land later. url-type servers show but cannot be added yet.</string>
+    <string name="hub_open_plugins">Plugins…</string>
+    <string name="plugins_title">Plugins</string>
+    <string name="plugins_installed">Installed</string>
+    <string name="plugins_none">No plugins installed.</string>
+    <string name="plugins_version">v%1$s</string>
+    <string name="plugins_marketplaces">Marketplaces</string>
+    <string name="plugins_partial_note">Read-only view over Claude Code installed_plugins.json / known_marketplaces.json. Install/disable and marketplace management land later.</string>
 </resources>

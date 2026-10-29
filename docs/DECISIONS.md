@@ -158,3 +158,9 @@ Append-only log. Format: date — decision — alternatives — reason — verif
 - ~/.bashrc exports deliberately not parsed in this increment (structured .env first; honest partial). shellAllowlisted shell-string cron plan (see M7.6) precedent: rejected before landing, this one never drafted at all.
 - Verification: conformance 57/57 (empty list, BAD_ENV_KEY x2, secret set, safe key kept raw, mask/no-leak, NOT_FOUND delete, clean deletes, file mode 0600) + live on-device probe: 2 real keys masked, HH_TMP_TEST_KEY set→masked(8B)→no leak→deleted→real keys intact.
 - App: EnvScreen (list/add/delete, masked values) + Hub Env… entry. M7 remaining: plugins, MCP, tools/permissions.
+
+## M7.9 mcp + plugins (2026-10-29)
+- McpScreen (section 13 row, Claude Code): mcpServers edits inside ~/.claude.json by pure text transforms (core:transport McpJson: parse —> mutate —> pretty 2-space write; sibling keys preserved; malformed/duplicate/missing refused). Bridge unchanged — reads go through fs.read with a 2 MB window plus a size guard (refuse rewrite if returned content < reported size); writes via fs.write (timestamped backup). Sibling keys verified by unit test (McpJsonTest: names/summaries/add/remove roundtrip/refusals/absent-mcpServers).
+- On-device verified shape: mcpServers count 1 (playwright, stdio script), 2 installed plugins (claude-mem@thedotmack v13.35.0, superpowers@superpowers-dev), 3 known marketplaces.
+- PluginsScreen read-only over installed_plugins.json + known_marketplaces.json (nothing mutates; install/disable engine later). No test-connection and no per-server tool listing yet (needs exec/claude mcp list — honest partial).
+- App still English-only; Hub actions row switched to FlowRow (8 buttons now wrap). Next M7 residual: tools/permissions dedupe with Hub rows, OpenCode-side MCP/plugin config.

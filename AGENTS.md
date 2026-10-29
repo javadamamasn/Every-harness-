@@ -131,6 +131,20 @@ OpenCode, OpenClaw, Codex, Gemini CLI, generic ACP/OpenAI-compatible, PTY fallba
       exports not parsed (structured .env first); biometric reveal and
       import/export land at M10.
 
+      M7.9 MCP + plugins done (section 13 row, Claude Code source): McpScreen
+      edits mcpServers in ~/.claude.json (pure text transforms in
+      core:transport McpJson — sibling keys preserved, malformed input refused,
+      duplicate/missing server refused; fs.read with a 2 MB window + size
+      guard that refuses rewriting configs larger than the window). Verified
+      on-device: mcpServers has 1 real stdio entry (playwright). PluginsScreen
+      reads ~/.claude/plugins/installed_plugins.json + known_marketplaces.json
+      (verified shape: plugins name@market -> list entries with scope/path/
+      version; marketplaces source{github-repo}); read-only. Unit tests:
+      core:transport McpJsonTest (names/summaries/add-remove roundtrip/
+      refusals). Partials: stdio add only (url types display via parser but
+      cannot be added), no test-connection, no exposed-tools listing for
+      servers, no plugin install/disable engine, no OpenCode mcp config.
+
       OpenCode Tier-1 DIRECT adapter done (section 20): harness/opencode with
       OpenCodeClient (HTTP+SSE, OpenAPI-derived, no bridge in default path;
       Basic auth when OPENCODE_SERVER_PASSWORD set), OpenCodeEventMapper
@@ -144,8 +158,10 @@ OpenCode, OpenClaw, Codex, Gemini CLI, generic ACP/OpenAI-compatible, PTY fallba
 - [ ] M7: skills, plugins, MCP, tools/permissions, providers/models, cron, memory, env.
       (Done so far: skills list/install/edit/delete over the bridge, models +
       provider switching, cron registry + minute scheduler + Schedules screen,
-      memory/identity screen over fs primitives, masked env list/set/delete.
-      Still open: plugins, MCP, tools/permissions.)
+      memory/identity screen over fs primitives, masked env list/set/delete,
+      MCP servers (mcpServers in ~/.claude.json) + read-only plugins view.
+      Still open: tools/permissions screen polish (exec flag + modes already
+      live in the Hub rows) and OpenCode-side MCP/plugin config.)
 - [ ] M8: OpenClaw, Codex, Gemini CLI, OpenCode, generic OpenAI-compatible, ACP, PTY.
 - [ ] M9: files, terminal, logs/diagnostics, usage.
 - [ ] M10: accessibility, perf, screenshot tests, docs, release build.

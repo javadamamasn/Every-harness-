@@ -29,8 +29,10 @@ import com.harnesshub.app.ui.screens.chat.ChatScreen
 import com.harnesshub.app.ui.screens.cron.CronScreen
 import com.harnesshub.app.ui.screens.env.EnvScreen
 import com.harnesshub.app.ui.screens.hub.HubScreen
+import com.harnesshub.app.ui.screens.mcp.McpScreen
 import com.harnesshub.app.ui.screens.memory.MemoryScreen
 import com.harnesshub.app.ui.screens.models.ModelsScreen
+import com.harnesshub.app.ui.screens.plugins.PluginsScreen
 import com.harnesshub.app.ui.screens.projects.ProjectsScreen
 import com.harnesshub.app.ui.screens.sessions.SessionsScreen
 import com.harnesshub.app.ui.screens.settings.SettingsScreen
@@ -93,6 +95,8 @@ fun HarnessHubNavHost() {
                     onOpenCron = { navController.navigate("cron") },
                     onOpenMemory = { navController.navigate("memory") },
                     onOpenEnv = { navController.navigate("env") },
+                    onOpenMcp = { navController.navigate("mcp") },
+                    onOpenPlugins = { navController.navigate("plugins") },
                 )
             }
             composable("chat") { ChatScreen(onOpenSetup = { navController.navigate("wizard") }) }
@@ -101,6 +105,8 @@ fun HarnessHubNavHost() {
             composable("cron") { CronScreen() }
             composable("memory") { MemoryScreen() }
             composable("env") { EnvScreen() }
+            composable("mcp") { McpScreen() }
+            composable("plugins") { PluginsScreen() }
             composable("sessions") {
                 SessionsScreen(onOpenChat = { navController.navigate("chat") })
             }

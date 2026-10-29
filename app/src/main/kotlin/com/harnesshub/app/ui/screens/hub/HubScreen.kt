@@ -3,6 +3,7 @@ package com.harnesshub.app.ui.screens.hub
 import android.os.Build
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -40,8 +41,9 @@ import com.harnesshub.model.HarnessInstance
  * discovery engine over the local bridge. The setup sheet appears until a
  * bridge port + token exist in the settings store.
  */
+@OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 @Composable
-fun HubScreen(onOpenHermes: () -> Unit = {}, onOpenTasks: () -> Unit = {}, onOpenCron: () -> Unit = {}, onOpenMemory: () -> Unit = {}, onOpenEnv: () -> Unit = {}) {
+fun HubScreen(onOpenHermes: () -> Unit = {}, onOpenTasks: () -> Unit = {}, onOpenCron: () -> Unit = {}, onOpenMemory: () -> Unit = {}, onOpenEnv: () -> Unit = {}, onOpenMcp: () -> Unit = {}, onOpenPlugins: () -> Unit = {}) {
     val context = LocalContext.current
     val viewModel = remember { HubViewModel(context.applicationContext as android.app.Application) }
     val state by viewModel.state.collectAsState()
@@ -75,7 +77,7 @@ fun HubScreen(onOpenHermes: () -> Unit = {}, onOpenTasks: () -> Unit = {}, onOpe
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         Text(stringResource(R.string.hub_title), style = MaterialTheme.typography.headlineMedium)
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Button(onClick = { viewModel.rescan() }) {
                 Text(stringResource(R.string.hub_rescan))
             }
@@ -90,6 +92,12 @@ fun HubScreen(onOpenHermes: () -> Unit = {}, onOpenTasks: () -> Unit = {}, onOpe
             }
             TextButton(onClick = onOpenEnv) {
                 Text(stringResource(R.string.hub_open_env))
+            }
+            TextButton(onClick = onOpenMcp) {
+                Text(stringResource(R.string.hub_open_mcp))
+            }
+            TextButton(onClick = onOpenPlugins) {
+                Text(stringResource(R.string.hub_open_plugins))
             }
             TextButton(onClick = { showSetup = true }) {
                 Text(stringResource(R.string.hub_bridge_settings))
